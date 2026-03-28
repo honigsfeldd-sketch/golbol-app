@@ -1,0 +1,231 @@
+[
+  {
+    "name": "Alon Smith",
+    "position": "GK",
+    "rating": 5,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/124f24e0b_alon_smith.png",
+    "blackJerseyImage": null
+  },
+  {
+    "name": "Alon Zohar",
+    "position": "MID",
+    "rating": 9,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/b737f845e_alon_zohar_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/197bb142c_alon_zohar_black.jpeg"
+  },
+  {
+    "name": "Amir Alroy",
+    "position": "DEF",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/20c04b0b7_amir_alroy_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/2410c1201_amir_alroy_black.png"
+  },
+  {
+    "name": "Amit Manor",
+    "position": "FWD",
+    "rating": 7,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/dd839e27c_amit_manor_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/958a2aed9_amit_manor_black.png"
+  },
+  {
+    "name": "Ben Korman",
+    "position": "DEF",
+    "rating": 7,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/cc4c72b02_ben_korman_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/675f7bac6_ben_korman_black.png"
+  },
+  {
+    "name": "Dan Honigsfeld",
+    "position": "DEF",
+    "rating": 6,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/02573f3d2_IMG_0603.jpeg",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/0d4e95ec7_dan_honigsfeld_black.png"
+  },
+  {
+    "name": "Elad Nashalski",
+    "position": "DEF",
+    "rating": 7,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/2a161308a_4.jpeg",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/0c95c0ff9_elad_nashalski_black.png"
+  },
+  {
+    "name": "Eyal Tayar",
+    "position": "MID",
+    "rating": 8,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/d08805b3e_IMG_0605.jpeg",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/5e7e7d938_eyal_tayar_black.jpeg"
+  },
+  {
+    "name": "Hen Perez",
+    "position": "MID",
+    "rating": 7,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/f53971b6f_IMG_0616.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/153ac26ee_hen_peretz_black.jpeg"
+  },
+  {
+    "name": "Idan Kaufman",
+    "position": "DEF",
+    "rating": 6,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/6503b445f_idan_kaufman_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/f25d01206_idan_kaufman_black.jpeg"
+  },
+  {
+    "name": "Idan Marcus",
+    "position": "MID",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/d3dc89582_idan_marcus_white.png",
+    "blackJerseyImage": null
+  },
+  {
+    "name": "Ilay Baruch",
+    "position": "DEF",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/7da4f495c_ilay_baruch_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/092d4ef59_ilay_baruch_black.jpg"
+  },
+  {
+    "name": "Koren Meyuhas",
+    "position": "MID",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/98e9d8253_koren_meyuhas_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/362d7fb58_koren_meyuhas_black.jpeg"
+  },
+  {
+    "name": "Liran 20",
+    "position": "GK",
+    "rating": 5,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/00e21606c_liran_20.PNG",
+    "blackJerseyImage": null
+  },
+  {
+    "name": "Mikey Refaeli",
+    "position": "MID",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/ffab2b1ce_mikey_refaeli_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/54ba84f81_mikey_refaeli_black.jpeg"
+  },
+  {
+    "name": "Mikey Shtricker",
+    "position": "DEF",
+    "rating": 3,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/a487a7079_IMG_0628.jpeg",
+    "blackJerseyImage": null
+  },
+  {
+    "name": "Nir Yona",
+    "position": "DEF",
+    "rating": 8,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/8125150e9_IMG_0626.jpeg"
+  },
+  {
+    "name": "Niss Farchi",
+    "position": "MID",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/256f7e619_niss_farchi_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/d4ca0b15d_niss_farchi_black.jpeg"
+  },
+  {
+    "name": "Omer Drory",
+    "position": "MID",
+    "rating": 8,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/c24f964a7_IMG_0604.jpeg",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/ab5a9628d_omer_drory_black.jpeg"
+  },
+  {
+    "name": "Omer Kushmirski",
+    "position": "MID",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/4b6591955_omer_kushmirski_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/392d83546_omer_kushmirski_black.jpeg"
+  },
+  {
+    "name": "Omer Nir",
+    "position": "DEF",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/177bd0131_omer_nir_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/0998f75c5_omer_nir_black.jpeg"
+  },
+  {
+    "name": "Omer Zoref",
+    "position": "DEF",
+    "rating": 3,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/05914beaa_IMG_0611.png"
+  },
+  {
+    "name": "Omri Siniver",
+    "position": "MID",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/8d0527533_omri_siniver_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/32f192191_omri_siniver_black.jpeg"
+  },
+  {
+    "name": "Oren Shiratzki",
+    "position": "DEF",
+    "rating": 6,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/ccdc2b417_oren_shiratzki_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/eefc8a8ff_oren_shiratzki_black.jpeg"
+  },
+  {
+    "name": "Ran As",
+    "position": "FWD",
+    "rating": 7,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/741033375_IMG_0621.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/540c8fef8_IMG_0622.png"
+  },
+  {
+    "name": "Roy Dekalo",
+    "position": "MID",
+    "rating": 6,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/d8392a234_roy_dekalo_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/1f69aa7c8_roy_dekalo_black.jpeg"
+  },
+  {
+    "name": "Sean Assaf",
+    "position": "MID",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/8cabfd34c_sean_assaf_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/a65236ea3_sean_assaf_black.jpeg"
+  },
+  {
+    "name": "Stav Zamir",
+    "position": "DEF",
+    "rating": 4,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/e2aa2b63b_stav_zamir_white.jpeg",
+    "blackJerseyImage": null
+  },
+  {
+    "name": "Tal Avner",
+    "position": "FWD",
+    "rating": 9,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/0be5d3dd4_tal_avner_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/a420d6dc1_tal_avner_black.jpeg"
+  },
+  {
+    "name": "Tal Holin",
+    "position": "DEF",
+    "rating": 6,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/65e1f316b_tal_holin_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/f6ec5d701_tal_holin_black.jpeg"
+  },
+  {
+    "name": "Tamir Shrian",
+    "position": "FWD",
+    "rating": 5,
+    "image": "https://media.base44.com/images/public/69c46617215a7158c720f552/ec495ba04_tamir_shrian_white.png",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/c653ddcdd_tair_shrian_black.jpeg"
+  },
+  {
+    "name": "Tarek keezel",
+    "position": "DEF",
+    "rating": 7,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/a6eada915_3.jpeg",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/b09adca6d_tarek_keezel_black.jpeg"
+  },
+  {
+    "name": "guest player",
+    "position": "MID",
+    "rating": 6,
+    "image": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/6a5c41bed_1.jpeg",
+    "blackJerseyImage": "https://base44.app/api/apps/69c46617215a7158c720f552/files/mp/public/69c46617215a7158c720f552/3c7e3f074_reference_black.PNG"
+  }
+]

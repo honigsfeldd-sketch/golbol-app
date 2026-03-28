@@ -1,0 +1,42 @@
+{
+  "name": "Player",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "image": {
+      "type": "string",
+      "title": "Image (White Jersey)",
+      "format": "uri"
+    },
+    "blackJerseyImage": {
+      "type": "string",
+      "title": "Image (Black Jersey)",
+      "format": "uri"
+    },
+    "rating": {
+      "type": "number",
+      "title": "Rating",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 5
+    },
+    "position": {
+      "type": "string",
+      "title": "Position",
+      "enum": [
+        "GK",
+        "DEF",
+        "MID",
+        "FWD"
+      ],
+      "default": "MID"
+    }
+  },
+  "required": [
+    "name",
+    "rating"
+  ]
+}
