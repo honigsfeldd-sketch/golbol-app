@@ -255,20 +255,24 @@ export default function UpcomingMatch() {
     if (!shareRef.current || sharing) return;
     setSharing(true);
     try {
+      // Temporarily show the hidden export div
+      shareRef.current.style.display = "block";
       const canvas = await html2canvas(shareRef.current, {
         backgroundColor: "#ffffff",
-        scale: 2,
+        scale: 3,
         useCORS: true,
         logging: false,
+        width: shareRef.current.scrollWidth,
+        height: shareRef.current.scrollHeight,
       });
+      shareRef.current.style.display = "none";
+
       const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
       const file = new File([blob], "golbol-lineup.png", { type: "image/png" });
 
-      // Try Web Share API (mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: "Golbol Lineup" });
       } else {
-        // Fallback: download
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -371,9 +375,6 @@ export default function UpcomingMatch() {
             <p className="text-center text-muted-foreground text-sm">No match scheduled</p>
           )}
         </motion.div>
-
-        {/* === Shareable section start === */}
-        <div ref={shareRef} className="bg-background">
 
         {/* Match details — right under countdown */}
         <motion.div
@@ -561,9 +562,6 @@ export default function UpcomingMatch() {
           </div>
         </motion.div>
 
-        </div>
-        {/* === Shareable section end === */}
-
         {/* Share & End Match buttons */}
         <div className="flex gap-3 mt-6">
           <motion.button
@@ -592,6 +590,101 @@ export default function UpcomingMatch() {
               End Match
             </motion.button>
         )}
+        </div>
+      </div>
+
+      {/* Hidden export div — rendered off-screen for html2canvas */}
+      <div
+        ref={shareRef}
+        style={{
+          display: "none",
+          position: "fixed",
+          top: "-9999px",
+          left: "-9999px",
+          width: 390,
+          fontFamily: "Inter, system-ui, sans-serif",
+        }}
+      >
+        <div style={{ background: "#fff", padding: 24, paddingBottom: 32 }}>
+          {/* Header info */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>Date</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a" }}>{displayDate}</div>
+            </div>
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>Kick-off</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a" }}>{displayTime}</div>
+            </div>
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>Weather</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a" }}>{weather ? `${weather.icon} ${weather.temp}°` : "…"}</div>
+            </div>
+          </div>
+          <div style={{ textAlign: "center", fontSize: 11, color: "#aaa", marginBottom: 16 }}>{LOCATION}</div>
+
+          {/* White vs Black */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginBottom: 16 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", textTransform: "uppercase", letterSpacing: 2 }}>White</span>
+            <span style={{ fontSize: 12, color: "#ccc" }}>vs</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", textTransform: "uppercase", letterSpacing: 2 }}>Black</span>
+          </div>
+
+          {/* Pitch */}
+          <div style={{
+            position: "relative",
+            width: "100%",
+            paddingBottom: "140%",
+            background: FIELD_GREEN,
+            borderRadius: 20,
+            overflow: "hidden",
+          }}>
+            {/* Pitch lines SVG */}
+            <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} viewBox="0 0 300 420" preserveAspectRatio="none">
+              <rect x="12" y="12" width="276" height="396" fill="none" stroke={FIELD_LINES} strokeWidth="2" />
+              <line x1="12" y1="210" x2="288" y2="210" stroke={FIELD_LINES} strokeWidth="2" />
+              <circle cx="150" cy="210" r="42" fill="none" stroke={FIELD_LINES} strokeWidth="2" />
+              <circle cx="150" cy="210" r="3" fill={FIELD_LINES} />
+              <rect x="72" y="12" width="156" height="58" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
+              <rect x="108" y="12" width="84" height="26" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
+              <rect x="72" y="350" width="156" height="58" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
+              <rect x="108" y="382" width="84" height="26" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
+            </svg>
+
+            {/* Players */}
+            {slotsA.map((slot, idx) => {
+              const player = lineupA[idx];
+              if (!player) return null;
+              const abs = toAbsolute(slot, "A");
+              const imgSrc = player.image;
+              return (
+                <div key={`ea-${player.id}`} style={{
+                  position: "absolute", left: `${abs.x}%`, top: `${abs.y}%`,
+                  transform: "translate(-50%, -50%)", width: 50, height: 50,
+                  borderRadius: "50%", overflow: "hidden",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                }}>
+                  {imgSrc && <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                </div>
+              );
+            })}
+            {slotsB.map((slot, idx) => {
+              const player = lineupB[idx];
+              if (!player) return null;
+              const abs = toAbsolute(slot, "B");
+              const imgSrc = player.blackJerseyImage || player.image;
+              return (
+                <div key={`eb-${player.id}`} style={{
+                  position: "absolute", left: `${abs.x}%`, top: `${abs.y}%`,
+                  transform: "translate(-50%, -50%)", width: 50, height: 50,
+                  borderRadius: "50%", overflow: "hidden",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                }}>
+                  {imgSrc && <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
