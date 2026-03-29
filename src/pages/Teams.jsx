@@ -5,6 +5,32 @@ import { ArrowLeft, Shuffle, LayoutGrid, List } from "lucide-react";
 import TeamsPitchView from "../components/TeamsPitchView";
 import TeamsListView from "../components/TeamsListView";
 
+// Iron rules — constraints that must always be enforced
+const MUST_SEPARATE = [
+  // Ran and Tamir must NOT be on the same team
+  ["Ran As", "Tamir Shrian"],
+];
+const MUST_TOGETHER = [
+  // Eyal and Tamir must be on the same team (if both present)
+  ["Eyal Tayar", "Tamir Shrian"],
+];
+
+function validateIronRules(teamA, teamB) {
+  const nameInTeam = (name, team) => team.some(p => p.name === name);
+
+  for (const [a, b] of MUST_SEPARATE) {
+    if (nameInTeam(a, teamA) && nameInTeam(b, teamA)) return false;
+    if (nameInTeam(a, teamB) && nameInTeam(b, teamB)) return false;
+  }
+  for (const [a, b] of MUST_TOGETHER) {
+    const bothPresent = [...teamA, ...teamB].filter(p => p.name === a || p.name === b).length === 2;
+    if (!bothPresent) continue;
+    if (nameInTeam(a, teamA) && nameInTeam(b, teamB)) return false;
+    if (nameInTeam(a, teamB) && nameInTeam(b, teamA)) return false;
+  }
+  return true;
+}
+
 function generateBalancedTeams(players) {
   const gks = players.filter(p => p.position === "GK");
   const rest = players.filter(p => p.position !== "GK");
@@ -32,10 +58,60 @@ function generateBalancedTeams(players) {
     else { teamB.push(player); sumB += player.rating || 5; }
   }
 
+  // Fix iron rules by swapping players if needed
+  const fixIronRules = () => {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      if (validateIronRules(teamA, teamB)) return;
+
+      // Find a violation and fix it
+      for (const [a, b] of MUST_SEPARATE) {
+        const aInA = teamA.findIndex(p => p.name === a);
+        const bInA = teamA.findIndex(p => p.name === b);
+        if (aInA >= 0 && bInA >= 0) {
+          // Move b to teamB — swap with someone from teamB
+          const swapIdx = teamB.findIndex(p => !isLocked(p));
+          if (swapIdx >= 0) { const tmp = teamA[bInA]; teamA[bInA] = teamB[swapIdx]; teamB[swapIdx] = tmp; }
+          continue;
+        }
+        const aInB = teamB.findIndex(p => p.name === a);
+        const bInB = teamB.findIndex(p => p.name === b);
+        if (aInB >= 0 && bInB >= 0) {
+          const swapIdx = teamA.findIndex(p => !isLocked(p));
+          if (swapIdx >= 0) { const tmp = teamB[bInB]; teamB[bInB] = teamA[swapIdx]; teamA[swapIdx] = tmp; }
+        }
+      }
+      for (const [a, b] of MUST_TOGETHER) {
+        const aInA = teamA.findIndex(p => p.name === a);
+        const bInB = teamB.findIndex(p => p.name === b);
+        if (aInA >= 0 && bInB >= 0) {
+          // Move b to teamA — swap with someone from teamA
+          const swapIdx = teamA.findIndex(p => !isLocked(p) && p.name !== a);
+          if (swapIdx >= 0) { const tmp = teamB[bInB]; teamB[bInB] = teamA[swapIdx]; teamA[swapIdx] = tmp; }
+          continue;
+        }
+        const aInB = teamB.findIndex(p => p.name === a);
+        const bInA = teamA.findIndex(p => p.name === b);
+        if (aInB >= 0 && bInA >= 0) {
+          const swapIdx = teamB.findIndex(p => !isLocked(p) && p.name !== a);
+          if (swapIdx >= 0) { const tmp = teamA[bInA]; teamA[bInA] = teamB[swapIdx]; teamB[swapIdx] = tmp; }
+        }
+      }
+    }
+  };
+
+  // Players locked by iron rules should not be swapped
+  const isLocked = (player) => {
+    return [...MUST_SEPARATE, ...MUST_TOGETHER].some(
+      ([a, b]) => player.name === a || player.name === b
+    );
+  };
+
+  fixIronRules();
+
   if (teamA.length > 1 && teamB.length > 1) {
-    // Random swap for variety — but never swap GKs between teams
-    const swappableA = teamA.filter(p => !(gks.length >= 2 && p.position === "GK"));
-    const swappableB = teamB.filter(p => !(gks.length >= 2 && p.position === "GK"));
+    // Random swap for variety — but never swap GKs or iron-rule-locked players
+    const swappableA = teamA.filter(p => !(gks.length >= 2 && p.position === "GK") && !isLocked(p));
+    const swappableB = teamB.filter(p => !(gks.length >= 2 && p.position === "GK") && !isLocked(p));
     if (swappableA.length && swappableB.length) {
       const pa = swappableA[Math.floor(Math.random() * swappableA.length)];
       const pb = swappableB[Math.floor(Math.random() * swappableB.length)];
