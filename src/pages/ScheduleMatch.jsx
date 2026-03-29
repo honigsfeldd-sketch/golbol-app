@@ -18,7 +18,7 @@ export default function ScheduleMatch() {
   const [time, setTime] = useState("19:00");
 
   const handleConfirm = () => {
-    navigate("/lineup", { state: { teamA, teamB, selectedPlayers, date, time } });
+    navigate("/upcoming", { state: { teamA, teamB, selectedPlayers, date, time } });
   };
 
   const displayDate = date
