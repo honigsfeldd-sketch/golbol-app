@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, User } from "lucide-react";
+import { ArrowLeft, MapPin, User, Share2 } from "lucide-react";
+import html2canvas from "html2canvas";
 
 const LOCATION = "גולבול, אוניברסיטת תל אביב";
 const LAT = 32.1133;
@@ -247,6 +248,39 @@ export default function UpcomingMatch() {
   const [formationA, setFormationA] = useState("1-3-3");
   const [formationB, setFormationB] = useState("1-3-3");
   const [selected, setSelected] = useState(null); // { team, idx }
+  const [sharing, setSharing] = useState(false);
+  const shareRef = useRef(null);
+
+  const handleShare = useCallback(async () => {
+    if (!shareRef.current || sharing) return;
+    setSharing(true);
+    try {
+      const canvas = await html2canvas(shareRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      const file = new File([blob], "golbol-lineup.png", { type: "image/png" });
+
+      // Try Web Share API (mobile)
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Golbol Lineup" });
+      } else {
+        // Fallback: download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "golbol-lineup.png";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Share failed:", err);
+    }
+    setSharing(false);
+  }, [sharing]);
 
   const totalA = lineupA.reduce((s, p) => s + (p.rating || 5), 0);
   const totalB = lineupB.reduce((s, p) => s + (p.rating || 5), 0);
@@ -337,6 +371,9 @@ export default function UpcomingMatch() {
             <p className="text-center text-muted-foreground text-sm">No match scheduled</p>
           )}
         </motion.div>
+
+        {/* === Shareable section start === */}
+        <div ref={shareRef} className="bg-background">
 
         {/* Match details — right under countdown */}
         <motion.div
@@ -524,23 +561,38 @@ export default function UpcomingMatch() {
           </div>
         </motion.div>
 
-        {/* End Match button */}
-        {lineupA.length > 0 && (
-          <motion.div
+        </div>
+        {/* === Shareable section end === */}
+
+        {/* Share & End Match buttons */}
+        <div className="flex gap-3 mt-6">
+          <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.45 }}
-            className="mt-10"
+            transition={{ delay: 0.4 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleShare}
+            disabled={sharing}
+            className="h-14 px-5 rounded-2xl bg-secondary hover:bg-muted transition-colors flex items-center justify-center gap-2 font-semibold text-sm disabled:opacity-50"
           >
+            <Share2 className="w-4 h-4" />
+            {sharing ? "..." : "Share"}
+          </motion.button>
+
+        {/* End Match button */}
+        {lineupA.length > 0 && (
             <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate("/post-match", { state: { teamA: lineupA, teamB: lineupB, date, time, formationA, formationB } })}
-              className="w-full h-14 rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-colors flex items-center justify-center font-semibold text-sm"
+              className="flex-1 h-14 rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-colors flex items-center justify-center font-semibold text-sm"
             >
               End Match
             </motion.button>
-          </motion.div>
         )}
+        </div>
       </div>
     </div>
   );
