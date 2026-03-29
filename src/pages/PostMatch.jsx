@@ -161,31 +161,39 @@ function PlayerDot({ player, pctX, pctY, isBlack, goalCount, onTap, onLongPress 
 }
 
 // ---------- MVP SELECTOR ----------
-function MvpTeamRow({ players, label, mvpId, onSelect }) {
+function MvpTeamRow({ players, label, mvpId, onSelect, isBlack }) {
+  const bgColor = isBlack ? "bg-zinc-900" : "bg-zinc-100";
+  const labelColor = isBlack ? "text-white/50" : "text-zinc-400";
+  const nameColor = isBlack ? "text-white/70" : "text-foreground/70";
+
   return (
-    <div className="mb-4">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2 block">{label}</span>
+    <div className={`rounded-2xl p-3 ${bgColor} mb-3`}>
+      <span className={`text-[10px] font-bold uppercase tracking-widest ${labelColor} mb-2 block`}>{label}</span>
       <div className="grid grid-cols-4 gap-2">
         {players.map(p => {
           const isSelected = mvpId === p.id;
-          const imgSrc = p.image;
+          const imgSrc = isBlack && p.blackJerseyImage ? p.blackJerseyImage : p.image;
           return (
             <motion.button
               key={p.id}
               whileTap={{ scale: 0.93 }}
               onClick={() => onSelect(p.id)}
-              className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-colors ${isSelected ? "bg-yellow-500/10 ring-2 ring-yellow-400" : "hover:bg-secondary"}`}
+              className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-colors ${
+                isSelected
+                  ? "bg-yellow-500/15 ring-2 ring-yellow-400"
+                  : isBlack ? "active:bg-white/10" : "active:bg-white"
+              }`}
             >
               <div className={`w-11 h-11 rounded-full overflow-hidden border-2 transition-colors ${isSelected ? "border-yellow-400" : "border-transparent"}`}>
                 {imgSrc ? (
                   <img src={imgSrc} alt={p.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-secondary">
+                  <div className={`w-full h-full flex items-center justify-center ${isBlack ? "bg-zinc-700" : "bg-secondary"}`}>
                     <User className="w-4 h-4 text-muted-foreground" />
                   </div>
                 )}
               </div>
-              <span className="text-[10px] font-medium text-foreground/70 text-center truncate w-full leading-tight">
+              <span className={`text-[10px] font-medium ${nameColor} text-center truncate w-full leading-tight`}>
                 {p.name.split(" ")[0]}
               </span>
               {isSelected && (
@@ -208,8 +216,8 @@ function MvpSelector({ teamA, teamB, mvpId, onSelect }) {
         <Star className="w-4 h-4 text-yellow-500" />
         <span className="text-sm font-semibold">Man of the Match</span>
       </div>
-      <MvpTeamRow players={teamA} label="White" mvpId={mvpId} onSelect={onSelect} />
-      <MvpTeamRow players={teamB} label="Black" mvpId={mvpId} onSelect={onSelect} />
+      <MvpTeamRow players={teamA} label="White" mvpId={mvpId} onSelect={onSelect} isBlack={false} />
+      <MvpTeamRow players={teamB} label="Black" mvpId={mvpId} onSelect={onSelect} isBlack={true} />
     </div>
   );
 }
