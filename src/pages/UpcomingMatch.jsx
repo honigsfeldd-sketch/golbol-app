@@ -534,7 +534,7 @@ export default function UpcomingMatch() {
           >
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate("/post-match", { state: { teamA: lineupA, teamB: lineupB, date, time } })}
+              onClick={() => navigate("/post-match", { state: { teamA: lineupA, teamB: lineupB, date, time, formationA, formationB } })}
               className="w-full h-14 rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-colors flex items-center justify-center font-semibold text-sm"
             >
               End Match
