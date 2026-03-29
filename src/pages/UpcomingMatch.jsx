@@ -74,10 +74,15 @@ const FIELD_GREEN = "#00925B";
 const FIELD_LINES = "#0E9E68";
 
 function toAbsolute(slot, team) {
+  // Map slot coordinates to pitch percentages
+  // Team A (top): y 5% (near goal) to 46% (near midfield)
+  // Team B (bottom): y 95% (near goal) to 54% (near midfield)
+  // x is padded 8-92% to keep players away from edges
+  const px = 8 + (slot.x / 100) * 84; // pad x from 8% to 92%
   if (team === "A") {
-    return { x: slot.x, y: 2 + (slot.y / 100) * 46 };
+    return { x: px, y: 5 + (slot.y / 100) * 41 };
   } else {
-    return { x: slot.x, y: 98 - (slot.y / 100) * 46 };
+    return { x: px, y: 95 - (slot.y / 100) * 41 };
   }
 }
 
@@ -146,7 +151,7 @@ function useCountdown(date, time) {
 // ---------- COMPONENTS ----------
 function CountdownDigit({ value }) {
   return (
-    <span className="text-[64px] font-extralight tabular-nums tracking-tight leading-none text-foreground">
+    <span className="text-[40px] font-extralight tabular-nums tracking-tight leading-none text-foreground">
       {value}
     </span>
   );
@@ -299,23 +304,23 @@ export default function UpcomingMatch() {
 
       <div className="max-w-lg mx-auto px-6 pb-32">
 
-        {/* Countdown */}
+        {/* Countdown — compact */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-          className="pt-8 pb-12"
+          className="pt-4 pb-4"
         >
           {countdown ? (
             <div className="text-center">
               <div className="flex items-baseline justify-center">
                 <CountdownDigit value={countdown.hours} />
-                <span className="text-[40px] font-extralight text-foreground/20 mx-1 -translate-y-0.5">:</span>
+                <span className="text-[26px] font-extralight text-foreground/20 mx-0.5">:</span>
                 <CountdownDigit value={countdown.minutes} />
-                <span className="text-[40px] font-extralight text-foreground/20 mx-1 -translate-y-0.5">:</span>
+                <span className="text-[26px] font-extralight text-foreground/20 mx-0.5">:</span>
                 <CountdownDigit value={countdown.seconds} />
               </div>
-              <p className="text-[11px] text-muted-foreground/60 font-medium mt-3 uppercase tracking-[0.2em]">
+              <p className="text-[10px] text-muted-foreground/60 font-medium mt-1.5 uppercase tracking-[0.2em]">
                 Until kick-off
               </p>
             </div>
@@ -324,20 +329,49 @@ export default function UpcomingMatch() {
           )}
         </motion.div>
 
+        {/* Match details — right under countdown */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="mb-5"
+        >
+          <div className="grid grid-cols-3 gap-3 px-1">
+            <div className="flex flex-col items-center">
+              <span className="text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1">Date</span>
+              <span className="text-[12px] font-medium text-foreground/80 text-center">{displayDate}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1">Kick-off</span>
+              <span className="text-[12px] font-medium text-foreground/80">{displayTime}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1">Weather</span>
+              <span className="text-[12px] font-medium text-foreground/80">
+                {weather ? `${weather.icon} ${weather.temp}°` : "…"}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 mt-2.5 justify-center">
+            <MapPin className="w-3 h-3 text-muted-foreground/30" />
+            <span className="text-[10px] text-muted-foreground/50">{LOCATION}</span>
+          </div>
+        </motion.div>
+
         {/* Dashed divider */}
-        <div className="border-t border-dashed border-border/60 mb-10" />
+        <div className="border-t border-dashed border-border/60 mb-5" />
 
         {/* Teams balance */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15, duration: 0.5 }}
-          className="flex items-center justify-between mb-8 px-2"
+          className="flex items-center justify-between mb-4 px-2"
         >
           <div className="flex flex-col items-start">
             <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground/50 mb-1">White</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-light tabular-nums text-foreground">{totalA}</span>
+              <span className="text-2xl font-light tabular-nums text-foreground">{totalA}</span>
               <span className="text-[10px] font-medium text-muted-foreground/40">pts</span>
             </div>
           </div>
@@ -348,7 +382,7 @@ export default function UpcomingMatch() {
             <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground/50 mb-1">Black</span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[10px] font-medium text-muted-foreground/40">pts</span>
-              <span className="text-3xl font-light tabular-nums text-foreground">{totalB}</span>
+              <span className="text-2xl font-light tabular-nums text-foreground">{totalB}</span>
             </div>
           </div>
         </motion.div>
@@ -478,38 +512,6 @@ export default function UpcomingMatch() {
                 {FORMATIONS[key].label}
               </button>
             ))}
-          </div>
-        </motion.div>
-
-        {/* Match details */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
-          className="mt-10"
-        >
-          <div className="border-t border-dashed border-border/60 pt-8">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1.5">Date</span>
-                <span className="text-[13px] font-medium text-foreground/80">{displayDate}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1.5">Kick-off</span>
-                <span className="text-[13px] font-medium text-foreground/80">{displayTime}</span>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1.5">Weather</span>
-                <span className="text-[13px] font-medium text-foreground/80">
-                  {weather ? `${weather.temp}° ${weather.condition}` : "…"}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 mt-5 justify-center">
-              <MapPin className="w-3 h-3 text-muted-foreground/30" />
-              <span className="text-[11px] text-muted-foreground/50">{LOCATION}</span>
-            </div>
           </div>
         </motion.div>
 
