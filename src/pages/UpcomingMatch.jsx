@@ -187,6 +187,7 @@ function PlayerDot({ player, pctX, pctY, isBlack, isSelected, onTap }) {
         transform: "translate(-50%, -50%)",
         zIndex: isSelected ? 40 : 10,
         touchAction: "none",
+        transition: "left 0.5s cubic-bezier(0.4, 0, 0.2, 1), top 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
       className="cursor-pointer select-none"
       onClick={onTap}
@@ -195,7 +196,7 @@ function PlayerDot({ player, pctX, pctY, isBlack, isSelected, onTap }) {
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: isSelected ? 1.15 : 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
-        className={`w-[56px] h-[56px] rounded-full overflow-hidden shadow-md transition-all duration-200 ${
+        className={`w-[56px] h-[56px] rounded-full overflow-hidden shadow-md transition-shadow duration-200 ${
           isSelected ? "ring-2 ring-yellow-400 ring-offset-1 ring-offset-transparent" : ""
         }`}
       >
