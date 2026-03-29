@@ -18,12 +18,17 @@ export default function Home() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editPlayer, setEditPlayer] = useState(null);
   const [darkKit, setDarkKit] = useState(false);
-  const [showPasteModal, setShowPasteModal] = useState(false);
-  const [pasteText, setPasteText] = useState("");
-  const [pasteResult, setPasteResult] = useState(null);
+  const handlePasteFromClipboard = async () => {
+    let text;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      alert("לא ניתן לגשת ללוח. אנא אשר הרשאת גישה.");
+      return;
+    }
+    if (!text || !text.trim()) return;
 
-  const handlePaste = () => {
-    const lines = pasteText.split("\n").map(l => l.trim()).filter(Boolean);
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
 
     // Stop before "מזמינים" (reserves/standby) section
     const stopKeywords = ["מזמינים", "ממתינים", "רזרבה", "המתנה"];
@@ -98,16 +103,10 @@ export default function Home() {
       }
     }
 
-    setPasteResult({ matched, unmatched, reserves });
-  };
-
-  const applyPasteSelection = () => {
-    if (!pasteResult) return;
-    setSelectionMode(true);
-    setSelectedIds(new Set(pasteResult.matched.map(p => p.id)));
-    setShowPasteModal(false);
-    setPasteText("");
-    setPasteResult(null);
+    if (matched.length > 0) {
+      setSelectionMode(true);
+      setSelectedIds(new Set(matched.map(p => p.id)));
+    }
   };
 
   const loadPlayers = async () => {
@@ -215,7 +214,7 @@ export default function Home() {
                       </motion.div>
                     </motion.button>
                     <Button
-                      onClick={() => setShowPasteModal(true)}
+                      onClick={handlePasteFromClipboard}
                       size="icon"
                       variant="ghost"
                       className="rounded-full w-10 h-10 bg-secondary hover:bg-muted"
@@ -300,128 +299,6 @@ export default function Home() {
         editPlayer={editPlayer}
       />
 
-      {/* Paste WhatsApp List Modal */}
-      <AnimatePresence>
-        {showPasteModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 backdrop-blur-sm"
-            onClick={() => { setShowPasteModal(false); setPasteText(""); setPasteResult(null); }}
-          >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="w-full max-w-lg bg-background rounded-t-3xl p-6 pb-10"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-semibold">הדבק רשימת שחקנים</h3>
-                <button
-                  onClick={() => { setShowPasteModal(false); setPasteText(""); setPasteResult(null); }}
-                  className="p-1.5 rounded-full hover:bg-secondary transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <p className="text-sm text-muted-foreground mb-3 text-right" dir="rtl">
-                הדבק את רשימת השחקנים מהוואצאפ כאן
-              </p>
-
-              <textarea
-                value={pasteText}
-                onChange={e => { setPasteText(e.target.value); setPasteResult(null); }}
-                placeholder={"1. אלון זוהר\n2. טל אבנר\n3. עומר דרורי\n..."}
-                className="w-full h-36 p-4 rounded-2xl bg-secondary border-none text-sm resize-none focus:outline-none focus:ring-2 focus:ring-foreground/10"
-                dir="rtl"
-              />
-
-              {pasteResult && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 space-y-3"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <span className="text-sm font-medium">{pasteResult.matched.length} שחקנים זוהו</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5" dir="rtl">
-                    {pasteResult.matched.map(p => (
-                      <span key={p.id} className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-700 font-medium">
-                        {p.nickname || p.name}
-                      </span>
-                    ))}
-                  </div>
-                  {pasteResult.unmatched.length > 0 && (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-400" />
-                        <span className="text-sm font-medium">{pasteResult.unmatched.length} לא זוהו</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5" dir="rtl">
-                        {pasteResult.unmatched.map((name, i) => (
-                          <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 font-medium">
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {pasteResult.reserves?.length > 0 && (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-orange-400" />
-                        <span className="text-sm font-medium">מזמינים ({pasteResult.reserves.length})</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5" dir="rtl">
-                        {pasteResult.reserves.map((p, i) => (
-                          <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-orange-400/10 text-orange-600 font-medium">
-                            {p.nickname || p.name}
-                          </span>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              )}
-
-              <div className="flex gap-3 mt-5">
-                {!pasteResult ? (
-                  <Button
-                    onClick={handlePaste}
-                    disabled={!pasteText.trim()}
-                    className="flex-1 h-12 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-semibold"
-                  >
-                    זהה שחקנים
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      onClick={() => setPasteResult(null)}
-                      variant="secondary"
-                      className="flex-1 h-12 rounded-2xl font-semibold"
-                    >
-                      חזור
-                    </Button>
-                    <Button
-                      onClick={applyPasteSelection}
-                      disabled={pasteResult.matched.length === 0}
-                      className="flex-1 h-12 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-semibold"
-                    >
-                      בחר {pasteResult.matched.length} שחקנים
-                    </Button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
