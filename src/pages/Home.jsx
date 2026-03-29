@@ -24,13 +24,26 @@ export default function Home() {
 
   const handlePaste = () => {
     const lines = pasteText.split("\n").map(l => l.trim()).filter(Boolean);
+
+    // Stop before "מזמינים" (reserves/standby) section
+    const stopKeywords = ["מזמינים", "ממתינים", "רזרבה", "המתנה"];
+    const cutoffIndex = lines.findIndex(l => stopKeywords.some(kw => l.includes(kw)));
+    const activeLines = cutoffIndex >= 0 ? lines.slice(0, cutoffIndex) : lines;
+
     // Extract names — remove numbering like "1.", "1)", "1 -" etc.
-    const names = lines.map(l => l.replace(/^\d+[\.\)\-\s]*/, "").trim()).filter(Boolean);
+    const names = activeLines.map(l => l.replace(/^\d+[\.\)\-\s]*/, "").trim()).filter(Boolean);
+    // Filter out non-name lines (headers, dates, location info)
+    const filteredNames = names.filter(l => {
+      // Skip lines that look like headers/info (contain day/time/location keywords)
+      if (/^(יום|במגרש|מגרש|שעה|\d{1,2}:\d{2})/.test(l)) return false;
+      if (l.includes("!!") || l.includes("??")) return false;
+      return true;
+    });
 
     const matched = [];
     const unmatched = [];
 
-    for (const name of names) {
+    for (const name of filteredNames) {
       const normalizedName = name.replace(/[^\u0590-\u05FFa-zA-Z\s]/g, "").trim();
       if (!normalizedName) continue;
 
@@ -63,7 +76,29 @@ export default function Home() {
       }
     }
 
-    setPasteResult({ matched, unmatched });
+    // Parse reserves (after "מזמינים" line)
+    const reserves = [];
+    if (cutoffIndex >= 0) {
+      const reserveLines = lines.slice(cutoffIndex + 1);
+      const reserveNames = reserveLines.map(l => l.replace(/^\d+[\.\)\-\s]*/, "").trim()).filter(Boolean);
+      for (const name of reserveNames) {
+        const normalizedR = name.replace(/[^\u0590-\u05FFa-zA-Z\s]/g, "").trim();
+        if (!normalizedR) continue;
+        const found = players.find(p => {
+          const nick = (p.nickname || "").trim();
+          const aliases = p.nicknameAliases || [];
+          if (nick && nick === normalizedR) return true;
+          if (aliases.some(a => a === normalizedR)) return true;
+          const fullName = (p.name || "").trim().toLowerCase();
+          if (fullName.includes(normalizedR.toLowerCase()) || normalizedR.toLowerCase().includes(fullName)) return true;
+          return false;
+        });
+        if (found) reserves.push(found);
+        else reserves.push({ name: normalizedR });
+      }
+    }
+
+    setPasteResult({ matched, unmatched, reserves });
   };
 
   const applyPasteSelection = () => {
@@ -332,6 +367,21 @@ export default function Home() {
                         {pasteResult.unmatched.map((name, i) => (
                           <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 font-medium">
                             {name}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {pasteResult.reserves?.length > 0 && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-orange-400" />
+                        <span className="text-sm font-medium">מזמינים ({pasteResult.reserves.length})</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5" dir="rtl">
+                        {pasteResult.reserves.map((p, i) => (
+                          <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-orange-400/10 text-orange-600 font-medium">
+                            {p.nickname || p.name}
                           </span>
                         ))}
                       </div>

@@ -10,19 +10,20 @@ function getMatch(matchId) {
   return history.find(m => m.id === matchId) || null;
 }
 
-function PlayerRow({ player, index }) {
+function PlayerRow({ player, index, darkKit }) {
   const navigate = useNavigate();
+  const imageSrc = darkKit && player.blackJerseyImage ? player.blackJerseyImage : player.image;
   return (
     <motion.button
       initial={{ opacity: 0, x: -6 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.02 }}
-      onClick={() => navigate(`/player/${player.id}`, { state: { player } })}
+      onClick={() => navigate(`/player/${player.id}`, { state: { player, darkKit } })}
       className="w-full flex items-center gap-3 py-2.5 border-b border-border/20 last:border-0"
     >
       <div className="w-9 h-9 rounded-full overflow-hidden border border-border/30 shrink-0">
-        {player.image ? (
-          <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
+        {imageSrc ? (
+          <img src={imageSrc} alt={player.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <User className="w-3.5 h-3.5 text-muted-foreground/40" />
@@ -232,7 +233,7 @@ export default function MatchDetail() {
                 <span className="text-[10px] text-muted-foreground/30">{match.teamB?.length || 0}</span>
               </div>
               {(match.teamB || []).map((p, i) => (
-                <PlayerRow key={p.id} player={p} index={i} />
+                <PlayerRow key={p.id} player={p} index={i} darkKit />
               ))}
             </div>
           </div>
