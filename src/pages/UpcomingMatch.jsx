@@ -75,21 +75,29 @@ const FIELD_LINES = "#0E9E68";
 
 function toAbsolute(slot, team) {
   // Map slot coordinates to pitch percentages
-  // Team A (top): y 5% (near goal) to 46% (near midfield)
-  // Team B (bottom): y 95% (near goal) to 54% (near midfield)
-  // x is padded 8-92% to keep players away from edges
-  const px = 8 + (slot.x / 100) * 84; // pad x from 8% to 92%
+  // x: straight mapping, centered on 50%
+  // Team A (top): y 5% (goal) → 46% (midfield)
+  // Team B (bottom): y 95% (goal) → 54% (midfield)
   if (team === "A") {
-    return { x: px, y: 5 + (slot.y / 100) * 41 };
+    return { x: slot.x, y: 5 + (slot.y / 100) * 41 };
   } else {
-    return { x: px, y: 95 - (slot.y / 100) * 41 };
+    return { x: slot.x, y: 95 - (slot.y / 100) * 41 };
   }
 }
 
-function getSlots(formationKey, teamSize) {
+function getSlots(formationKey, teamSize, players) {
   const formation = FORMATIONS[formationKey];
   if (!formation) return [];
+
+  // Find GK index in team
+  const gkIdx = players ? players.findIndex(p => p.position === "GK") : -1;
+
   const slots = formation.slots.slice(0, teamSize);
+  // If team has a GK, ensure slot 0 is the GK slot (y=4, centered)
+  if (gkIdx >= 0 && slots.length > 0) {
+    slots[0] = { x: 50, y: 4 }; // fixed GK position at the goal
+  }
+
   const extras = [];
   for (let i = slots.length; i < teamSize; i++) {
     extras.push({
@@ -98,6 +106,17 @@ function getSlots(formationKey, teamSize) {
     });
   }
   return [...slots, ...extras];
+}
+
+// Sort team so GK is always index 0
+function sortTeamGKFirst(team) {
+  const sorted = [...team];
+  const gkIdx = sorted.findIndex(p => p.position === "GK");
+  if (gkIdx > 0) {
+    const [gk] = sorted.splice(gkIdx, 1);
+    sorted.unshift(gk);
+  }
+  return sorted;
 }
 
 // ---------- HOOKS ----------
@@ -157,49 +176,48 @@ function CountdownDigit({ value }) {
   );
 }
 
-function PlayerDot({ player, x, y, isBlack, isSelected, onTap }) {
+function PlayerDot({ player, pctX, pctY, isBlack, isSelected, onTap }) {
   const imgSrc = isBlack && player.blackJerseyImage ? player.blackJerseyImage : player.image;
   const firstName = player.name.split(" ")[0];
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{
-        opacity: 1,
-        scale: isSelected ? 1.15 : 1,
-        left: `${x}%`,
-        top: `${y}%`,
-      }}
-      transition={{ type: "spring", stiffness: 300, damping: 26 }}
+    <div
       style={{
         position: "absolute",
+        left: `${pctX}%`,
+        top: `${pctY}%`,
         transform: "translate(-50%, -50%)",
-        touchAction: "none",
         zIndex: isSelected ? 40 : 10,
+        touchAction: "none",
       }}
       className="flex flex-col items-center gap-1 cursor-pointer select-none"
       onClick={onTap}
     >
-      <div
-        className={`w-11 h-11 rounded-full overflow-hidden border-2 shadow-lg transition-all duration-200 ${
-          isSelected
-            ? "border-yellow-400 ring-2 ring-yellow-400/40 scale-110"
-            : "border-white/50"
-        }`}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: isSelected ? 1.15 : 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 26 }}
       >
-        {imgSrc ? (
-          <img src={imgSrc} alt={player.name} className="w-full h-full object-cover" draggable={false} />
-        ) : (
-          <div className={`w-full h-full flex items-center justify-center ${isBlack ? "bg-zinc-800" : "bg-white/30"}`}>
-            <User className="w-5 h-5 text-white/70" />
-          </div>
-        )}
-      </div>
+        <div
+          className={`w-11 h-11 rounded-full overflow-hidden border-2 shadow-lg transition-all duration-200 ${
+            isSelected
+              ? "border-yellow-400 ring-2 ring-yellow-400/40"
+              : "border-white/50"
+          }`}
+        >
+          {imgSrc ? (
+            <img src={imgSrc} alt={player.name} className="w-full h-full object-cover" draggable={false} />
+          ) : (
+            <div className={`w-full h-full flex items-center justify-center ${isBlack ? "bg-zinc-800" : "bg-white/30"}`}>
+              <User className="w-5 h-5 text-white/70" />
+            </div>
+          )}
+        </div>
+      </motion.div>
       <span className="text-[9px] font-bold text-white drop-shadow-md text-center max-w-[56px] truncate leading-none">
         {firstName}
       </span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -233,8 +251,8 @@ export default function UpcomingMatch() {
   const countdown = useCountdown(date, time);
   const weather = useWeather(date, time);
 
-  const [lineupA, setLineupA] = useState([...initA]);
-  const [lineupB, setLineupB] = useState([...initB]);
+  const [lineupA, setLineupA] = useState(sortTeamGKFirst(initA));
+  const [lineupB, setLineupB] = useState(sortTeamGKFirst(initB));
   const [formationA, setFormationA] = useState("1-3-3");
   const [formationB, setFormationB] = useState("1-3-3");
   const [selected, setSelected] = useState(null); // { team, idx }
@@ -284,8 +302,8 @@ export default function UpcomingMatch() {
     setSelected(null);
   };
 
-  const slotsA = getSlots(formationA, lineupA.length);
-  const slotsB = getSlots(formationB, lineupB.length);
+  const slotsA = getSlots(formationA, lineupA.length, lineupA);
+  const slotsB = getSlots(formationB, lineupB.length, lineupB);
 
   return (
     <div className="min-h-screen bg-background">
@@ -468,8 +486,8 @@ export default function UpcomingMatch() {
                 <PlayerDot
                   key={`a-${player.id}`}
                   player={player}
-                  x={abs.x}
-                  y={abs.y}
+                  pctX={abs.x}
+                  pctY={abs.y}
                   isBlack={false}
                   isSelected={selected?.team === "A" && selected?.idx === idx}
                   onTap={() => handlePlayerTap("A", idx)}
@@ -486,8 +504,8 @@ export default function UpcomingMatch() {
                 <PlayerDot
                   key={`b-${player.id}`}
                   player={player}
-                  x={abs.x}
-                  y={abs.y}
+                  pctX={abs.x}
+                  pctY={abs.y}
                   isBlack={true}
                   isSelected={selected?.team === "B" && selected?.idx === idx}
                   onTap={() => handlePlayerTap("B", idx)}
