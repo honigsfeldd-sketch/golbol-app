@@ -23,35 +23,35 @@ const FORMATIONS = {
   "1-3-3": {
     label: "1-3-3",
     slots: [
-      { x: 50, y: 8 },
-      { x: 20, y: 38 },
-      { x: 50, y: 38 },
-      { x: 80, y: 38 },
-      { x: 20, y: 72 },
-      { x: 50, y: 72 },
-      { x: 80, y: 72 },
+      { x: 50, y: 6 },
+      { x: 18, y: 36 },
+      { x: 50, y: 36 },
+      { x: 82, y: 36 },
+      { x: 18, y: 70 },
+      { x: 50, y: 70 },
+      { x: 82, y: 70 },
     ],
   },
   "1-3-1-2": {
     label: "1-3-1-2",
     slots: [
-      { x: 50, y: 8 },
-      { x: 20, y: 35 },
-      { x: 50, y: 35 },
-      { x: 80, y: 35 },
-      { x: 50, y: 56 },
-      { x: 35, y: 78 },
-      { x: 65, y: 78 },
+      { x: 50, y: 6 },
+      { x: 18, y: 32 },
+      { x: 50, y: 32 },
+      { x: 82, y: 32 },
+      { x: 50, y: 55 },
+      { x: 33, y: 78 },
+      { x: 67, y: 78 },
     ],
   },
   "1-4-1-1": {
     label: "1-4-1-1",
     slots: [
-      { x: 50, y: 8 },
-      { x: 15, y: 35 },
-      { x: 38, y: 35 },
-      { x: 62, y: 35 },
-      { x: 85, y: 35 },
+      { x: 50, y: 6 },
+      { x: 12, y: 34 },
+      { x: 37, y: 34 },
+      { x: 63, y: 34 },
+      { x: 88, y: 34 },
       { x: 50, y: 56 },
       { x: 50, y: 78 },
     ],
@@ -59,13 +59,13 @@ const FORMATIONS = {
   "1-2-3-1": {
     label: "1-2-3-1",
     slots: [
-      { x: 50, y: 8 },
-      { x: 30, y: 33 },
-      { x: 70, y: 33 },
-      { x: 20, y: 56 },
-      { x: 50, y: 56 },
-      { x: 80, y: 56 },
-      { x: 50, y: 80 },
+      { x: 50, y: 6 },
+      { x: 30, y: 30 },
+      { x: 70, y: 30 },
+      { x: 18, y: 55 },
+      { x: 50, y: 55 },
+      { x: 82, y: 55 },
+      { x: 50, y: 78 },
     ],
   },
 };
@@ -75,13 +75,12 @@ const FIELD_LINES = "#0E9E68";
 
 function toAbsolute(slot, team) {
   // Map slot coordinates to pitch percentages
-  // x: straight mapping, centered on 50%
-  // Team A (top): y 5% (goal) → 46% (midfield)
-  // Team B (bottom): y 95% (goal) → 54% (midfield)
+  // Team A (top): y 4% (goal) → 47% (midfield)
+  // Team B (bottom): y 96% (goal) → 53% (midfield)
   if (team === "A") {
-    return { x: slot.x, y: 5 + (slot.y / 100) * 41 };
+    return { x: slot.x, y: 4 + (slot.y / 100) * 43 };
   } else {
-    return { x: slot.x, y: 95 - (slot.y / 100) * 41 };
+    return { x: slot.x, y: 96 - (slot.y / 100) * 43 };
   }
 }
 
@@ -178,7 +177,6 @@ function CountdownDigit({ value }) {
 
 function PlayerDot({ player, pctX, pctY, isBlack, isSelected, onTap }) {
   const imgSrc = isBlack && player.blackJerseyImage ? player.blackJerseyImage : player.image;
-  const firstName = player.name.split(" ")[0];
 
   return (
     <div
@@ -190,33 +188,25 @@ function PlayerDot({ player, pctX, pctY, isBlack, isSelected, onTap }) {
         zIndex: isSelected ? 40 : 10,
         touchAction: "none",
       }}
-      className="flex flex-col items-center gap-1 cursor-pointer select-none"
+      className="cursor-pointer select-none"
       onClick={onTap}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: isSelected ? 1.15 : 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
+        className={`w-10 h-10 rounded-full overflow-hidden shadow-md transition-all duration-200 ${
+          isSelected ? "ring-2 ring-yellow-400 ring-offset-1 ring-offset-transparent" : ""
+        }`}
       >
-        <div
-          className={`w-11 h-11 rounded-full overflow-hidden border-2 shadow-lg transition-all duration-200 ${
-            isSelected
-              ? "border-yellow-400 ring-2 ring-yellow-400/40"
-              : "border-white/50"
-          }`}
-        >
-          {imgSrc ? (
-            <img src={imgSrc} alt={player.name} className="w-full h-full object-cover" draggable={false} />
-          ) : (
-            <div className={`w-full h-full flex items-center justify-center ${isBlack ? "bg-zinc-800" : "bg-white/30"}`}>
-              <User className="w-5 h-5 text-white/70" />
-            </div>
-          )}
-        </div>
+        {imgSrc ? (
+          <img src={imgSrc} alt={player.name} className="w-full h-full object-cover" draggable={false} />
+        ) : (
+          <div className={`w-full h-full flex items-center justify-center ${isBlack ? "bg-zinc-800" : "bg-white/30"}`}>
+            <User className="w-4 h-4 text-white/70" />
+          </div>
+        )}
       </motion.div>
-      <span className="text-[9px] font-bold text-white drop-shadow-md text-center max-w-[56px] truncate leading-none">
-        {firstName}
-      </span>
     </div>
   );
 }
