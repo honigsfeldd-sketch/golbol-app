@@ -161,15 +161,12 @@ function PlayerDot({ player, pctX, pctY, isBlack, goalCount, onTap, onLongPress 
 }
 
 // ---------- MVP SELECTOR ----------
-function MvpSelector({ allPlayers, mvpId, onSelect }) {
+function MvpTeamRow({ players, label, mvpId, onSelect }) {
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <Star className="w-4 h-4 text-yellow-500" />
-        <span className="text-sm font-semibold">Man of the Match</span>
-      </div>
-      <div className="grid grid-cols-4 gap-3">
-        {allPlayers.map(p => {
+    <div className="mb-4">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2 block">{label}</span>
+      <div className="grid grid-cols-4 gap-2">
+        {players.map(p => {
           const isSelected = mvpId === p.id;
           const imgSrc = p.image;
           return (
@@ -200,6 +197,19 @@ function MvpSelector({ allPlayers, mvpId, onSelect }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function MvpSelector({ teamA, teamB, mvpId, onSelect }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-4">
+        <Star className="w-4 h-4 text-yellow-500" />
+        <span className="text-sm font-semibold">Man of the Match</span>
+      </div>
+      <MvpTeamRow players={teamA} label="White" mvpId={mvpId} onSelect={onSelect} />
+      <MvpTeamRow players={teamB} label="Black" mvpId={mvpId} onSelect={onSelect} />
     </div>
   );
 }
@@ -440,7 +450,8 @@ export default function PostMatch() {
         >
           <div className="border-t border-dashed border-border/60 pt-6">
             <MvpSelector
-              allPlayers={allPlayers}
+              teamA={lineupA}
+              teamB={lineupB}
               mvpId={mvpId}
               onSelect={(id) => setMvpId(prev => prev === id ? null : id)}
             />
