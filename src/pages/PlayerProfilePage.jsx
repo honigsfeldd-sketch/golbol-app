@@ -241,7 +241,7 @@ export default function PlayerProfilePage() {
               </div>
               <div>
                 {stats.matchHistory.map((match, i) => (
-                  <MatchRow key={match.id} match={match} index={i} />
+                  <MatchRow key={match.id} match={match} index={i} onPress={() => navigate(`/match/${match.id}`)} />
                 ))}
               </div>
             </div>
