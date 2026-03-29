@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Users, X, ClipboardPaste } from "lucide-react";
+import { Plus, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import PlayerCard from "../components/PlayerCard";
@@ -18,16 +18,10 @@ export default function Home() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editPlayer, setEditPlayer] = useState(null);
   const [darkKit, setDarkKit] = useState(false);
-  const handlePasteFromClipboard = async () => {
-    let text;
-    try {
-      text = await navigator.clipboard.readText();
-    } catch {
-      alert("לא ניתן לגשת ללוח. אנא אשר הרשאת גישה.");
-      return;
-    }
-    if (!text || !text.trim()) return;
 
+  // Process pasted text (from global paste event)
+  const processWhatsAppList = (text) => {
+    if (!text || !text.trim()) return;
     const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
 
     // Stop before "מזמינים" (reserves/standby) section
@@ -116,6 +110,23 @@ export default function Home() {
   };
 
   useEffect(() => { loadPlayers(); }, []);
+
+  // Global paste listener — paste anywhere on the page to select players
+  useEffect(() => {
+    const handleGlobalPaste = (e) => {
+      // Don't intercept if user is typing in an input/textarea
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
+
+      const text = e.clipboardData?.getData("text");
+      if (text) {
+        e.preventDefault();
+        processWhatsAppList(text);
+      }
+    };
+    document.addEventListener("paste", handleGlobalPaste);
+    return () => document.removeEventListener("paste", handleGlobalPaste);
+  }, [players]);
 
   const toggleSelection = (id) => {
     setSelectedIds((prev) => {
@@ -213,14 +224,6 @@ export default function Home() {
                         </div>
                       </motion.div>
                     </motion.button>
-                    <Button
-                      onClick={handlePasteFromClipboard}
-                      size="icon"
-                      variant="ghost"
-                      className="rounded-full w-10 h-10 bg-secondary hover:bg-muted"
-                    >
-                      <ClipboardPaste className="w-5 h-5" />
-                    </Button>
                     <Button
                       onClick={() => setShowAddModal(true)}
                       size="icon"
