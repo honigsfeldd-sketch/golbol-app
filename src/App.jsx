@@ -9,6 +9,7 @@ import ScheduleMatch from './pages/ScheduleMatch';
 import UpcomingMatch from './pages/UpcomingMatch';
 import History from './pages/History';
 import Settings from './pages/Settings';
+import Lineup from './pages/Lineup';
 import PostMatch from './pages/PostMatch';
 import PlayerProfilePage from './pages/PlayerProfilePage';
 import MatchDetail from './pages/MatchDetail';
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/schedule" element={<ScheduleMatch />} />
+          <Route path="/lineup" element={<Lineup />} />
           <Route path="/upcoming" element={<UpcomingMatch />} />
           <Route path="/post-match" element={<PostMatch />} />
           <Route path="/player/:id" element={<PlayerProfilePage />} />

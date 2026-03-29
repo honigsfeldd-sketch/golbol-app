@@ -59,23 +59,23 @@ export default function TeamsPitchView({ teamA, teamB, shuffleKey }) {
   return (
     <div
       className="relative w-full rounded-3xl overflow-hidden"
-      style={{ minHeight: 520, background: "linear-gradient(180deg, #1e9e47 0%, #178038 48%, #1e9e47 100%)" }}
+      style={{ minHeight: 520, background: "#00925B" }}
     >
       {/* Pitch lines */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.12]" viewBox="0 0 300 520" preserveAspectRatio="none">
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 300 520" preserveAspectRatio="none">
         {/* Outer boundary */}
-        <rect x="10" y="10" width="280" height="500" fill="none" stroke="white" strokeWidth="2" />
+        <rect x="10" y="10" width="280" height="500" fill="none" stroke="#0E9E68" strokeWidth="2" />
         {/* Center line */}
-        <line x1="10" y1="260" x2="290" y2="260" stroke="white" strokeWidth="2" />
+        <line x1="10" y1="260" x2="290" y2="260" stroke="#0E9E68" strokeWidth="2" />
         {/* Center circle */}
-        <circle cx="150" cy="260" r="40" fill="none" stroke="white" strokeWidth="2" />
-        <circle cx="150" cy="260" r="3" fill="white" />
+        <circle cx="150" cy="260" r="40" fill="none" stroke="#0E9E68" strokeWidth="2" />
+        <circle cx="150" cy="260" r="3" fill="#0E9E68" />
         {/* Top penalty box */}
-        <rect x="75" y="10" width="150" height="65" fill="none" stroke="white" strokeWidth="1.5" />
-        <rect x="110" y="10" width="80" height="30" fill="none" stroke="white" strokeWidth="1.5" />
+        <rect x="75" y="10" width="150" height="65" fill="none" stroke="#0E9E68" strokeWidth="1.5" />
+        <rect x="110" y="10" width="80" height="30" fill="none" stroke="#0E9E68" strokeWidth="1.5" />
         {/* Bottom penalty box */}
-        <rect x="75" y="445" width="150" height="65" fill="none" stroke="white" strokeWidth="1.5" />
-        <rect x="110" y="480" width="80" height="30" fill="none" stroke="white" strokeWidth="1.5" />
+        <rect x="75" y="445" width="150" height="65" fill="none" stroke="#0E9E68" strokeWidth="1.5" />
+        <rect x="110" y="480" width="80" height="30" fill="none" stroke="#0E9E68" strokeWidth="1.5" />
       </svg>
 
       {/* Teams */}

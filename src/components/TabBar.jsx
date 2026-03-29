@@ -55,7 +55,7 @@ const tabs = [
 ];
 
 // Routes where tab bar should be hidden
-const HIDDEN_ROUTES = ["/teams", "/schedule", "/post-match", "/player", "/match"];
+const HIDDEN_ROUTES = ["/teams", "/schedule", "/lineup", "/post-match", "/player", "/match"];
 
 export default function TabBar() {
   const location = useLocation();
