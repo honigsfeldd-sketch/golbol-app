@@ -308,11 +308,12 @@ export default function PostMatch() {
           animate={{ opacity: 1 }}
           className="pt-2 mb-4"
         >
-          <div className="grid grid-cols-2 gap-3 px-1">
+          <div className="flex items-center justify-center gap-6 px-1">
             <div className="flex flex-col items-center">
               <span className="text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1">Date</span>
-              <span className="text-[12px] font-medium text-foreground/80 text-center">{displayDate}</span>
+              <span className="text-[12px] font-medium text-foreground/80">{displayDate}</span>
             </div>
+            <div className="w-px h-6 bg-border/40" />
             <div className="flex flex-col items-center">
               <span className="text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground/40 mb-1">Kick-off</span>
               <span className="text-[12px] font-medium text-foreground/80">{displayTime}</span>
