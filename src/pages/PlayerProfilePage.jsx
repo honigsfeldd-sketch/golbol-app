@@ -2,49 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, User, Trophy, Minus, ChevronRight } from "lucide-react";
-
-const HISTORY_KEY = "golbol_match_history";
-
-function getPlayerStats(playerId) {
-  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-  let matches = 0, wins = 0, draws = 0, losses = 0, goals = 0, mvps = 0;
-  const matchHistory = [];
-
-  for (const match of history) {
-    const inA = (match.teamA || []).find(p => p.id === playerId);
-    const inB = (match.teamB || []).find(p => p.id === playerId);
-    const playerEntry = inA || inB;
-    if (!playerEntry) continue;
-
-    matches++;
-    const playerGoals = playerEntry.goals || 0;
-    goals += playerGoals;
-    const isMvp = match.mvp?.id === playerId;
-    if (isMvp) mvps++;
-
-    const isWhite = !!inA;
-    const myScore = isWhite ? match.scoreWhite : match.scoreBlack;
-    const oppScore = isWhite ? match.scoreBlack : match.scoreWhite;
-    const result = myScore > oppScore ? "W" : myScore < oppScore ? "L" : "D";
-    if (result === "W") wins++;
-    else if (result === "D") draws++;
-    else losses++;
-
-    matchHistory.push({
-      id: match.id,
-      date: match.date,
-      team: isWhite ? "White" : "Black",
-      opponent: isWhite ? "Black" : "White",
-      scoreFor: myScore,
-      scoreAgainst: oppScore,
-      result,
-      playerGoals,
-      isMvp,
-    });
-  }
-
-  return { matches, wins, draws, losses, goals, mvps, matchHistory };
-}
+import { matchHistory as matchHistoryAPI } from "../api/base44Client";
 
 function StatBox({ label, value, icon, highlight }) {
   return (
@@ -120,7 +78,7 @@ export default function PlayerProfilePage() {
 
   useEffect(() => {
     if (player) {
-      setStats(getPlayerStats(player.id));
+      matchHistoryAPI.getPlayerStats(player.id).then(setStats);
     }
   }, [player]);
 

@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Trophy, User, ChevronRight } from "lucide-react";
-
-const HISTORY_KEY = "golbol_match_history";
-
-function getHistory() {
-  const data = localStorage.getItem(HISTORY_KEY);
-  return data ? JSON.parse(data) : [];
-}
+import { matchHistory } from "../api/base44Client";
 
 function MatchCard({ match, index, onPress }) {
   const displayDate = match.date
@@ -78,7 +72,7 @@ export default function History() {
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
-    setMatches(getHistory());
+    matchHistory.list().then(setMatches);
   }, []);
 
   return (

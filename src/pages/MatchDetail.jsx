@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trophy, User, MapPin } from "lucide-react";
-
-const HISTORY_KEY = "golbol_match_history";
-
-function getMatch(matchId) {
-  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-  return history.find(m => m.id === matchId) || null;
-}
+import { matchHistory } from "../api/base44Client";
 
 function PlayerRow({ player, index, darkKit }) {
   const navigate = useNavigate();
@@ -51,7 +45,7 @@ export default function MatchDetail() {
   const [match, setMatch] = useState(null);
 
   useEffect(() => {
-    setMatch(getMatch(matchId));
+    matchHistory.get(matchId).then(setMatch);
   }, [matchId]);
 
   if (!match) {

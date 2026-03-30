@@ -2,20 +2,9 @@ import { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, User, Trophy, Check, Star } from "lucide-react";
+import { matchHistory } from "../api/base44Client";
 
 const LOCATION = "גולבול, אוניברסיטת תל אביב";
-const HISTORY_KEY = "golbol_match_history";
-
-function getHistory() {
-  const data = localStorage.getItem(HISTORY_KEY);
-  return data ? JSON.parse(data) : [];
-}
-
-function saveMatchToHistory(match) {
-  const history = getHistory();
-  history.unshift(match);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-}
 
 // ---------- FORMATIONS (same as Upcoming) ----------
 const FORMATIONS = {
@@ -267,7 +256,7 @@ export default function PostMatch() {
     ? new Date(`2000-01-01T${time}`).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
     : "—";
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const mvpPlayer = allPlayers.find(p => p.id === mvpId);
     const match = {
       id: Date.now().toString(36),
@@ -278,7 +267,11 @@ export default function PostMatch() {
       scoreBlack: blackGoals,
       mvp: mvpPlayer ? { id: mvpPlayer.id, name: mvpPlayer.name, image: mvpPlayer.image } : null,
     };
-    saveMatchToHistory(match);
+    try {
+      await matchHistory.save(match);
+    } catch (err) {
+      console.error('Failed to save match:', err);
+    }
     setSaved(true);
     setTimeout(() => navigate("/history"), 1200);
   };

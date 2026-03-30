@@ -1,115 +1,105 @@
-// Local storage-based replacement for Base44 SDK
+// Supabase-based data layer (replaces localStorage)
+import { supabase } from '@/lib/supabase';
 import { players as seedPlayers } from '@/data/players';
 
-const STORAGE_KEY = 'golbol_players';
-const SEEDED_KEY = 'golbol_seeded';
+// ---------- SEEDING ----------
+// Seed players into Supabase if the table is empty
+let _seeded = false;
+async function ensureSeeded() {
+  if (_seeded) return;
+  _seeded = true;
 
-function getPlayers() {
-  // Seed on first load
-  if (!localStorage.getItem(SEEDED_KEY)) {
-    const seeded = seedPlayers.map((p, i) => ({ ...p, id: String(p.id || i + 1) }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-    localStorage.setItem(SEEDED_KEY, 'true');
-    return seeded;
+  const { count } = await supabase
+    .from('players')
+    .select('*', { count: 'exact', head: true });
+
+  if (count === 0) {
+    // Insert all seed players
+    const rows = seedPlayers.map(p => ({
+      id: p.id,
+      name: p.name,
+      nickname: p.nickname || null,
+      nickname_aliases: p.nicknameAliases || [],
+      position: p.position || null,
+      rating: p.rating || 5,
+      image: p.image || null,
+      black_jersey_image: p.blackJerseyImage || null,
+    }));
+    const { error } = await supabase.from('players').insert(rows);
+    if (error) console.error('Seed error:', error);
   }
-  const data = localStorage.getItem(STORAGE_KEY);
-  let players = data ? JSON.parse(data) : [];
-
-  // Merge nicknames from seed data — versioned so updates apply
-  const NICK_VERSION = '3';
-  const NICK_KEY = 'golbol_nicknames_v';
-  if (localStorage.getItem(NICK_KEY) !== NICK_VERSION) {
-    const seedMap = Object.fromEntries(seedPlayers.map(p => [String(p.id), { nickname: p.nickname, nicknameAliases: p.nicknameAliases }]));
-    players = players.map(p => {
-      const seed = seedMap[String(p.id)];
-      if (!seed) return p;
-      return { ...p, nickname: seed.nickname || p.nickname || "", nicknameAliases: seed.nicknameAliases || [] };
-    });
-    savePlayers(players);
-    localStorage.setItem(NICK_KEY, NICK_VERSION);
-  }
-
-  // === PRODUCTION RESET — 2026-03-30 ===
-  // One-time migration: clear all test/demo match history and stats.
-  // Player records, ratings, and profiles are preserved.
-  const PROD_RESET_KEY = 'golbol_prod_reset';
-  const PROD_RESET_VERSION = '1';
-  if (localStorage.getItem(PROD_RESET_KEY) !== PROD_RESET_VERSION) {
-    localStorage.removeItem('golbol_match_history');
-    // Zero out any stat fields stored directly on player objects
-    const STAT_FIELDS = ['games', 'wins', 'draws', 'losses', 'goals', 'assists', 'mvps', 'motm', 'cleanSheets', 'matchesPlayed', 'goalsScored', 'manOfTheMatch', 'winRate'];
-    players = players.map(p => {
-      const cleaned = { ...p };
-      for (const field of STAT_FIELDS) {
-        if (field in cleaned) cleaned[field] = 0;
-      }
-      return cleaned;
-    });
-    savePlayers(players);
-    localStorage.setItem(PROD_RESET_KEY, PROD_RESET_VERSION);
-  }
-
-  // Merge black jersey images from seed data — versioned
-  const BJI_VERSION = '3';
-  const BJI_KEY = 'golbol_bji_v';
-  if (localStorage.getItem(BJI_KEY) !== BJI_VERSION) {
-    // Match by id OR by name (in case ids differ)
-    const seedById = Object.fromEntries(seedPlayers.map(p => [String(p.id), p]));
-    const seedByName = Object.fromEntries(seedPlayers.map(p => [p.name, p]));
-    players = players.map(p => {
-      const seed = seedById[String(p.id)] || seedByName[p.name];
-      if (seed?.blackJerseyImage) return { ...p, blackJerseyImage: seed.blackJerseyImage };
-      return p;
-    });
-    savePlayers(players);
-    localStorage.setItem(BJI_KEY, BJI_VERSION);
-  }
-
-  return players;
 }
 
-function savePlayers(players) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+// ---------- HELPERS ----------
+// Convert DB row (snake_case) → app object (camelCase)
+function rowToPlayer(row) {
+  return {
+    id: String(row.id),
+    name: row.name,
+    nickname: row.nickname || '',
+    nicknameAliases: row.nickname_aliases || [],
+    position: row.position || '',
+    rating: row.rating || 5,
+    image: row.image || '',
+    blackJerseyImage: row.black_jersey_image || null,
+  };
 }
 
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+// Convert app object (camelCase) → DB row (snake_case)
+function playerToRow(data) {
+  const row = {};
+  if ('name' in data) row.name = data.name;
+  if ('nickname' in data) row.nickname = data.nickname;
+  if ('nicknameAliases' in data) row.nickname_aliases = data.nicknameAliases;
+  if ('position' in data) row.position = data.position;
+  if ('rating' in data) row.rating = data.rating;
+  if ('image' in data) row.image = data.image;
+  if ('blackJerseyImage' in data) row.black_jersey_image = data.blackJerseyImage;
+  return row;
 }
 
+// ---------- PLAYER API ----------
 export const base44 = {
   entities: {
     Player: {
       async list(sortBy = 'name') {
-        const players = getPlayers();
-        if (sortBy) {
-          players.sort((a, b) => {
-            const aVal = a[sortBy] || '';
-            const bVal = b[sortBy] || '';
-            return typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal;
-          });
-        }
-        return players;
+        await ensureSeeded();
+        const { data, error } = await supabase
+          .from('players')
+          .select('*')
+          .order(sortBy === 'name' ? 'name' : sortBy, { ascending: true });
+        if (error) { console.error('List error:', error); return []; }
+        return data.map(rowToPlayer);
       },
-      async create(data) {
-        const players = getPlayers();
-        const player = { id: generateId(), ...data };
-        players.push(player);
-        savePlayers(players);
-        return player;
+      async create(playerData) {
+        await ensureSeeded();
+        const row = playerToRow(playerData);
+        if (playerData.name) row.name = playerData.name;
+        const { data, error } = await supabase
+          .from('players')
+          .insert([row])
+          .select()
+          .single();
+        if (error) { console.error('Create error:', error); throw error; }
+        return rowToPlayer(data);
       },
-      async update(id, data) {
-        const players = getPlayers();
-        const idx = players.findIndex(p => p.id === id);
-        if (idx !== -1) {
-          players[idx] = { ...players[idx], ...data };
-          savePlayers(players);
-          return players[idx];
-        }
-        throw new Error('Player not found');
+      async update(id, playerData) {
+        const row = playerToRow(playerData);
+        const { data, error } = await supabase
+          .from('players')
+          .update(row)
+          .eq('id', Number(id))
+          .select()
+          .single();
+        if (error) { console.error('Update error:', error); throw error; }
+        return rowToPlayer(data);
       },
       async delete(id) {
-        const players = getPlayers().filter(p => p.id !== id);
-        savePlayers(players);
+        const { error } = await supabase
+          .from('players')
+          .delete()
+          .eq('id', Number(id));
+        if (error) { console.error('Delete error:', error); throw error; }
       }
     }
   },
@@ -125,5 +115,101 @@ export const base44 = {
         });
       }
     }
+  }
+};
+
+// ---------- MATCH HISTORY API ----------
+export const matchHistory = {
+  async list() {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) { console.error('Match list error:', error); return []; }
+    return data.map(row => ({
+      id: row.id,
+      date: row.date,
+      time: row.time,
+      teamA: row.team_a || [],
+      teamB: row.team_b || [],
+      scoreWhite: row.score_white,
+      scoreBlack: row.score_black,
+      mvp: row.mvp,
+    }));
+  },
+
+  async get(matchId) {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('id', matchId)
+      .single();
+    if (error) { console.error('Match get error:', error); return null; }
+    return {
+      id: data.id,
+      date: data.date,
+      time: data.time,
+      teamA: data.team_a || [],
+      teamB: data.team_b || [],
+      scoreWhite: data.score_white,
+      scoreBlack: data.score_black,
+      mvp: data.mvp,
+    };
+  },
+
+  async save(match) {
+    const row = {
+      id: match.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      date: match.date || null,
+      time: match.time || null,
+      team_a: match.teamA || [],
+      team_b: match.teamB || [],
+      score_white: match.scoreWhite || 0,
+      score_black: match.scoreBlack || 0,
+      mvp: match.mvp || null,
+    };
+    const { error } = await supabase.from('matches').insert([row]);
+    if (error) { console.error('Match save error:', error); throw error; }
+    return row.id;
+  },
+
+  async getPlayerStats(playerId) {
+    const matches = await this.list();
+    let total = 0, wins = 0, draws = 0, losses = 0, goals = 0, mvps = 0;
+    const matchHistory = [];
+
+    for (const match of matches) {
+      const inA = match.teamA?.find(p => String(p.id) === String(playerId));
+      const inB = match.teamB?.find(p => String(p.id) === String(playerId));
+      if (!inA && !inB) continue;
+
+      total++;
+      const playerGoals = (inA?.goals || inB?.goals || 0);
+      goals += playerGoals;
+
+      const sW = match.scoreWhite || 0;
+      const sB = match.scoreBlack || 0;
+      const onWhite = !!inA;
+      const myScore = onWhite ? sW : sB;
+      const theirScore = onWhite ? sB : sW;
+
+      if (myScore > theirScore) wins++;
+      else if (myScore === theirScore) draws++;
+      else losses++;
+
+      if (match.mvp && String(match.mvp.id) === String(playerId)) mvps++;
+
+      matchHistory.push({
+        matchId: match.id,
+        date: match.date,
+        team: onWhite ? 'White' : 'Black',
+        scoreWhite: sW,
+        scoreBlack: sB,
+        goals: playerGoals,
+        result: myScore > theirScore ? 'W' : myScore < theirScore ? 'L' : 'D',
+      });
+    }
+
+    return { matches: total, wins, draws, losses, goals, mvps, matchHistory };
   }
 };
