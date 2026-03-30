@@ -250,6 +250,19 @@ export default function UpcomingMatch() {
   const [selected, setSelected] = useState(null); // { team, idx }
   const [sharing, setSharing] = useState(false);
 
+  const totalA = lineupA.reduce((s, p) => s + (p.rating || 5), 0);
+  const totalB = lineupB.reduce((s, p) => s + (p.rating || 5), 0);
+
+  const displayDate = date
+    ? new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })
+    : "—";
+  const displayTime = time
+    ? new Date(`2000-01-01T${time}`).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    : "—";
+
+  const slotsA = getSlots(formationA, lineupA.length, lineupA);
+  const slotsB = getSlots(formationB, lineupB.length, lineupB);
+
   // Load an image as a promise
   const loadImg = (src) =>
     new Promise((resolve) => {
@@ -435,16 +448,6 @@ export default function UpcomingMatch() {
     setSharing(false);
   }, [sharing, lineupA, lineupB, slotsA, slotsB, displayDate, displayTime, weather]);
 
-  const totalA = lineupA.reduce((s, p) => s + (p.rating || 5), 0);
-  const totalB = lineupB.reduce((s, p) => s + (p.rating || 5), 0);
-
-  const displayDate = date
-    ? new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })
-    : "—";
-  const displayTime = time
-    ? new Date(`2000-01-01T${time}`).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
-    : "—";
-
   // Tap-to-swap
   const handlePlayerTap = (team, idx) => {
     if (!selected) {
@@ -479,9 +482,6 @@ export default function UpcomingMatch() {
     }
     setSelected(null);
   };
-
-  const slotsA = getSlots(formationA, lineupA.length, lineupA);
-  const slotsB = getSlots(formationB, lineupB.length, lineupB);
 
   return (
     <div className="min-h-screen bg-background">
