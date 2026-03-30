@@ -24,49 +24,49 @@ const FORMATIONS = {
   "1-3-3": {
     label: "1-3-3",
     slots: [
-      { x: 50, y: 6 },
-      { x: 18, y: 36 },
-      { x: 50, y: 36 },
-      { x: 82, y: 36 },
-      { x: 18, y: 70 },
-      { x: 50, y: 70 },
-      { x: 82, y: 70 },
+      { x: 50, y: 5 },
+      { x: 18, y: 35 },
+      { x: 50, y: 35 },
+      { x: 82, y: 35 },
+      { x: 18, y: 68 },
+      { x: 50, y: 68 },
+      { x: 82, y: 68 },
     ],
   },
   "1-3-1-2": {
     label: "1-3-1-2",
     slots: [
-      { x: 50, y: 6 },
-      { x: 18, y: 32 },
-      { x: 50, y: 32 },
-      { x: 82, y: 32 },
-      { x: 50, y: 55 },
-      { x: 33, y: 78 },
-      { x: 67, y: 78 },
+      { x: 50, y: 5 },
+      { x: 18, y: 30 },
+      { x: 50, y: 30 },
+      { x: 82, y: 30 },
+      { x: 50, y: 52 },
+      { x: 33, y: 76 },
+      { x: 67, y: 76 },
     ],
   },
   "1-4-1-1": {
     label: "1-4-1-1",
     slots: [
-      { x: 50, y: 6 },
-      { x: 12, y: 34 },
-      { x: 37, y: 34 },
-      { x: 63, y: 34 },
-      { x: 88, y: 34 },
-      { x: 50, y: 56 },
-      { x: 50, y: 78 },
+      { x: 50, y: 5 },
+      { x: 10, y: 32 },
+      { x: 36, y: 32 },
+      { x: 64, y: 32 },
+      { x: 90, y: 32 },
+      { x: 50, y: 54 },
+      { x: 50, y: 76 },
     ],
   },
   "1-2-3-1": {
     label: "1-2-3-1",
     slots: [
-      { x: 50, y: 6 },
-      { x: 30, y: 30 },
-      { x: 70, y: 30 },
-      { x: 18, y: 55 },
-      { x: 50, y: 55 },
-      { x: 82, y: 55 },
-      { x: 50, y: 78 },
+      { x: 50, y: 5 },
+      { x: 30, y: 28 },
+      { x: 70, y: 28 },
+      { x: 18, y: 52 },
+      { x: 50, y: 52 },
+      { x: 82, y: 52 },
+      { x: 50, y: 76 },
     ],
   },
 };
@@ -76,12 +76,12 @@ const FIELD_LINES = "#0E9E68";
 
 function toAbsolute(slot, team) {
   // Map slot coordinates to pitch percentages
-  // Team A (top): y 4% (goal) → 47% (midfield)
-  // Team B (bottom): y 96% (goal) → 53% (midfield)
+  // Team A (top): y 3% (goal) → 46% (near midfield)
+  // Team B (bottom): y 97% (goal) → 54% (near midfield)
   if (team === "A") {
-    return { x: slot.x, y: 4 + (slot.y / 100) * 43 };
+    return { x: slot.x, y: 3 + (slot.y / 100) * 43 };
   } else {
-    return { x: slot.x, y: 96 - (slot.y / 100) * 43 };
+    return { x: slot.x, y: 97 - (slot.y / 100) * 43 };
   }
 }
 
@@ -95,7 +95,7 @@ function getSlots(formationKey, teamSize, players) {
   const slots = formation.slots.slice(0, teamSize);
   // If team has a GK, ensure slot 0 is the GK slot (y=4, centered)
   if (gkIdx >= 0 && slots.length > 0) {
-    slots[0] = { x: 50, y: 4 }; // fixed GK position at the goal
+    slots[0] = { x: 50, y: 2 }; // fixed GK position at the goal
   }
 
   const extras = [];
