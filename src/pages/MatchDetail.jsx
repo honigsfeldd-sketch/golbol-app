@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, User, MapPin } from "lucide-react";
+import { ArrowLeft, Trophy, User, MapPin, Trash2 } from "lucide-react";
 import { matchHistory } from "../api/base44Client";
+
+const ADMIN_PIN = "2563";
 
 function PlayerRow({ player, index, darkKit }) {
   const navigate = useNavigate();
@@ -43,6 +45,25 @@ export default function MatchDetail() {
   const { matchId } = useParams();
   const navigate = useNavigate();
   const [match, setMatch] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (pin !== ADMIN_PIN) {
+      setPinError(true);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await matchHistory.delete(matchId);
+      navigate("/history", { replace: true });
+    } catch (err) {
+      console.error("Delete failed:", err);
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     matchHistory.get(matchId).then(setMatch);
@@ -83,7 +104,12 @@ export default function MatchDetail() {
             <ArrowLeft className="w-4 h-4 text-foreground/70" />
           </button>
           <span className="text-sm font-semibold">Match Details</span>
-          <div className="w-9" />
+          <button
+            onClick={() => { setShowDeleteModal(true); setPin(""); setPinError(false); }}
+            className="w-9 h-9 rounded-full bg-secondary/60 flex items-center justify-center hover:bg-red-500/10 transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-muted-foreground/50" />
+          </button>
         </div>
       </div>
 
@@ -234,6 +260,52 @@ export default function MatchDetail() {
         </motion.div>
 
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card rounded-2xl border border-border/40 p-6 w-full max-w-sm shadow-xl"
+          >
+            <h3 className="text-lg font-semibold mb-1">Delete Match</h3>
+            <p className="text-sm text-muted-foreground/60 mb-5">Enter PIN to delete this match permanently.</p>
+
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              value={pin}
+              onChange={e => { setPin(e.target.value); setPinError(false); }}
+              placeholder="PIN"
+              autoFocus
+              className={`w-full h-12 rounded-xl bg-secondary/60 border text-center text-lg font-semibold tracking-[0.3em] placeholder:tracking-normal placeholder:font-normal placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 transition-colors ${
+                pinError ? "border-red-400 focus:ring-red-400/30" : "border-border/30 focus:ring-foreground/20"
+              }`}
+            />
+            {pinError && (
+              <p className="text-xs text-red-500 mt-1.5 text-center">Wrong PIN</p>
+            )}
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 h-11 rounded-xl bg-secondary/60 text-sm font-medium hover:bg-secondary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting || pin.length < 4}
+                className="flex-1 h-11 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-40"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

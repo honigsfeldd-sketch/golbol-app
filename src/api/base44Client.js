@@ -173,6 +173,14 @@ export const matchHistory = {
     return row.id;
   },
 
+  async delete(matchId) {
+    const { error } = await supabase
+      .from('matches')
+      .delete()
+      .eq('id', matchId);
+    if (error) { console.error('Match delete error:', error); throw error; }
+  },
+
   async getPlayerStats(playerId) {
     const matches = await this.list();
     let total = 0, wins = 0, draws = 0, losses = 0, goals = 0, mvps = 0;
