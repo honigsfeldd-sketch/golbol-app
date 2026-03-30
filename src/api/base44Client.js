@@ -29,6 +29,20 @@ function getPlayers() {
     localStorage.setItem(NICK_KEY, NICK_VERSION);
   }
 
+  // Merge black jersey images from seed data — versioned
+  const BJI_VERSION = '2';
+  const BJI_KEY = 'golbol_bji_v';
+  if (localStorage.getItem(BJI_KEY) !== BJI_VERSION) {
+    const seedMap = Object.fromEntries(seedPlayers.map(p => [String(p.id), p.blackJerseyImage]));
+    players = players.map(p => {
+      const seedBji = seedMap[String(p.id)];
+      if (seedBji) return { ...p, blackJerseyImage: seedBji };
+      return p;
+    });
+    savePlayers(players);
+    localStorage.setItem(BJI_KEY, BJI_VERSION);
+  }
+
   return players;
 }
 
