@@ -311,7 +311,7 @@ export default function UpcomingMatch() {
       const PITCH_W_PX = 342 * S;
       const PITCH_H_PX = Math.round(342 * 1.4) * S;
       const PITCH_R = 20 * S;
-      const DOT_R = 25 * S; // player circle radius
+      const DOT_R = 23 * S; // player circle radius (matches 46px interactive)
       const T = 24 * S; // top padding
       const HEADER_H = T + 140 * S;
       const PITCH_TOP = HEADER_H;
@@ -327,12 +327,14 @@ export default function UpcomingMatch() {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, W, TOTAL_H);
 
-      // --- Header text (3 equal columns) ---
+      // --- Header text (3 columns with padding from edges) ---
       const textColor = "#1a1a1a";
       const labelColor = "#999999";
-      const col1 = W / 6;       // left third center
-      const col2 = W / 2;       // middle
-      const col3 = (W * 5) / 6; // right third center
+      const colPad = 30 * S; // padding from edges
+      const colW = (W - colPad * 2) / 3;
+      const col1 = colPad + colW / 2;     // ~30% from left
+      const col2 = W / 2;                  // center
+      const col3 = W - colPad - colW / 2;  // ~30% from right
       const labelY = T + 16 * S;
       const valueY = T + 40 * S;
 
