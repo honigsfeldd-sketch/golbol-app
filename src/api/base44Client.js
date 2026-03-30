@@ -30,13 +30,15 @@ function getPlayers() {
   }
 
   // Merge black jersey images from seed data — versioned
-  const BJI_VERSION = '2';
+  const BJI_VERSION = '3';
   const BJI_KEY = 'golbol_bji_v';
   if (localStorage.getItem(BJI_KEY) !== BJI_VERSION) {
-    const seedMap = Object.fromEntries(seedPlayers.map(p => [String(p.id), p.blackJerseyImage]));
+    // Match by id OR by name (in case ids differ)
+    const seedById = Object.fromEntries(seedPlayers.map(p => [String(p.id), p]));
+    const seedByName = Object.fromEntries(seedPlayers.map(p => [p.name, p]));
     players = players.map(p => {
-      const seedBji = seedMap[String(p.id)];
-      if (seedBji) return { ...p, blackJerseyImage: seedBji };
+      const seed = seedById[String(p.id)] || seedByName[p.name];
+      if (seed?.blackJerseyImage) return { ...p, blackJerseyImage: seed.blackJerseyImage };
       return p;
     });
     savePlayers(players);
