@@ -308,14 +308,16 @@ export default function UpcomingMatch() {
     try {
       const S = 3; // scale factor for retina
       const W = 390 * S;
-      const PITCH_W_PX = 342 * S;
+      const SIDE_PAD = 24 * S;
+      const PITCH_W_PX = (390 - 48) * S; // 342
       const PITCH_H_PX = Math.round(342 * 1.4) * S;
       const PITCH_R = 20 * S;
       const DOT_R = 25 * S; // player circle radius
-      const HEADER_H = 180 * S;
+      const TOP_PAD = 32 * S;
+      const HEADER_H = TOP_PAD + 130 * S; // more space for header
       const PITCH_TOP = HEADER_H;
-      const PITCH_LEFT = (W - PITCH_W_PX) / 2;
-      const TOTAL_H = PITCH_TOP + PITCH_H_PX + 40 * S;
+      const PITCH_LEFT = SIDE_PAD;
+      const TOTAL_H = PITCH_TOP + PITCH_H_PX + 50 * S;
 
       const canvas = document.createElement("canvas");
       canvas.width = W;
@@ -329,48 +331,49 @@ export default function UpcomingMatch() {
       // --- Header text ---
       const textColor = "#1a1a1a";
       const labelColor = "#999999";
+      const headerY = TOP_PAD; // start of header content
 
       // Date
       ctx.fillStyle = labelColor;
       ctx.font = `600 ${11 * S}px Inter, system-ui, sans-serif`;
       ctx.textAlign = "center";
-      ctx.fillText("DATE", W * 0.17, 30 * S);
+      ctx.fillText("DATE", W * 0.17, headerY + 14 * S);
       ctx.fillStyle = textColor;
-      ctx.font = `600 ${15 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText(displayDate, W * 0.17, 52 * S);
+      ctx.font = `600 ${16 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText(displayDate, W * 0.17, headerY + 36 * S);
 
       // Kick-off
       ctx.fillStyle = labelColor;
       ctx.font = `600 ${11 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText("KICK-OFF", W * 0.5, 30 * S);
+      ctx.fillText("KICK-OFF", W * 0.5, headerY + 14 * S);
       ctx.fillStyle = textColor;
-      ctx.font = `600 ${15 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText(displayTime, W * 0.5, 52 * S);
+      ctx.font = `600 ${16 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText(displayTime, W * 0.5, headerY + 36 * S);
 
       // Weather
       ctx.fillStyle = labelColor;
       ctx.font = `600 ${11 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText("WEATHER", W * 0.83, 30 * S);
+      ctx.fillText("WEATHER", W * 0.83, headerY + 14 * S);
       ctx.fillStyle = textColor;
-      ctx.font = `600 ${15 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText(weather ? `${weather.icon} ${weather.temp}°` : "…", W * 0.83, 52 * S);
+      ctx.font = `600 ${16 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText(weather ? `${weather.icon} ${weather.temp}°` : "…", W * 0.83, headerY + 36 * S);
 
       // Location
       ctx.fillStyle = "#aaaaaa";
       ctx.font = `400 ${11 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText(LOCATION, W / 2, 78 * S);
+      ctx.fillText(LOCATION, W / 2, headerY + 62 * S);
 
       // White vs Black
       ctx.fillStyle = textColor;
       ctx.font = `700 ${14 * S}px Inter, system-ui, sans-serif`;
       ctx.letterSpacing = `${2 * S}px`;
-      ctx.fillText("WHITE", W / 2 - 50 * S, 110 * S);
+      ctx.fillText("WHITE", W / 2 - 50 * S, headerY + 95 * S);
       ctx.fillStyle = "#cccccc";
       ctx.font = `400 ${12 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText("vs", W / 2, 110 * S);
+      ctx.fillText("vs", W / 2, headerY + 95 * S);
       ctx.fillStyle = textColor;
       ctx.font = `700 ${14 * S}px Inter, system-ui, sans-serif`;
-      ctx.fillText("BLACK", W / 2 + 50 * S, 110 * S);
+      ctx.fillText("BLACK", W / 2 + 50 * S, headerY + 95 * S);
 
       // --- Draw pitch (rounded rect) ---
       ctx.fillStyle = FIELD_GREEN;
