@@ -441,7 +441,8 @@ export default function UpcomingMatch() {
       const file = new File([blob], "golbol-lineup.png", { type: "image/png" });
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "Golbol Lineup" });
+        const shareText = `⚽ גולבול - ${displayDate} | ${displayTime}\n📍 ${LOCATION}\n\n🤍 White vs Black 🖤`;
+        await navigator.share({ files: [file], title: "Golbol Lineup", text: shareText });
       } else {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
