@@ -29,6 +29,16 @@ function getPlayers() {
     localStorage.setItem(NICK_KEY, NICK_VERSION);
   }
 
+  // === PRODUCTION RESET — 2026-03-30 ===
+  // One-time migration: clear all test/demo match history and stats.
+  // Player records, ratings, and profiles are preserved.
+  const PROD_RESET_KEY = 'golbol_prod_reset';
+  const PROD_RESET_VERSION = '1';
+  if (localStorage.getItem(PROD_RESET_KEY) !== PROD_RESET_VERSION) {
+    localStorage.removeItem('golbol_match_history');
+    localStorage.setItem(PROD_RESET_KEY, PROD_RESET_VERSION);
+  }
+
   // Merge black jersey images from seed data — versioned
   const BJI_VERSION = '3';
   const BJI_KEY = 'golbol_bji_v';
