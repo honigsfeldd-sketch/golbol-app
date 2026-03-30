@@ -36,6 +36,16 @@ function getPlayers() {
   const PROD_RESET_VERSION = '1';
   if (localStorage.getItem(PROD_RESET_KEY) !== PROD_RESET_VERSION) {
     localStorage.removeItem('golbol_match_history');
+    // Zero out any stat fields stored directly on player objects
+    const STAT_FIELDS = ['games', 'wins', 'draws', 'losses', 'goals', 'assists', 'mvps', 'motm', 'cleanSheets', 'matchesPlayed', 'goalsScored', 'manOfTheMatch', 'winRate'];
+    players = players.map(p => {
+      const cleaned = { ...p };
+      for (const field of STAT_FIELDS) {
+        if (field in cleaned) cleaned[field] = 0;
+      }
+      return cleaned;
+    });
+    savePlayers(players);
     localStorage.setItem(PROD_RESET_KEY, PROD_RESET_VERSION);
   }
 
