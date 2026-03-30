@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, User, Share2 } from "lucide-react";
-import html2canvas from "html2canvas";
+// Canvas-based share image (no html2canvas dependency)
 
 const LOCATION = "גולבול, אוניברסיטת תל אביב";
 const LAT = 32.1133;
@@ -249,25 +249,174 @@ export default function UpcomingMatch() {
   const [formationB, setFormationB] = useState("1-3-3");
   const [selected, setSelected] = useState(null); // { team, idx }
   const [sharing, setSharing] = useState(false);
-  const shareRef = useRef(null);
+
+  // Load an image as a promise
+  const loadImg = (src) =>
+    new Promise((resolve) => {
+      if (!src) return resolve(null);
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+
+  // Draw a circle-clipped image on canvas
+  const drawCircleImg = (ctx, img, cx, cy, r) => {
+    if (!img) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = "#bbb";
+      ctx.fill();
+      return;
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    // Draw image covering the circle (center-crop)
+    const size = Math.min(img.width, img.height);
+    const sx = (img.width - size) / 2;
+    const sy = (img.height - size) / 2;
+    ctx.drawImage(img, sx, sy, size, size, cx - r, cy - r, r * 2, r * 2);
+    ctx.restore();
+    // Shadow ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(0,0,0,0.08)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  };
 
   const handleShare = useCallback(async () => {
-    if (!shareRef.current || sharing) return;
+    if (sharing) return;
     setSharing(true);
     try {
-      // Temporarily show the hidden export div
-      shareRef.current.style.display = "block";
-      const canvas = await html2canvas(shareRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 3,
-        useCORS: true,
-        logging: false,
-        width: shareRef.current.scrollWidth,
-        height: shareRef.current.scrollHeight,
-      });
-      shareRef.current.style.display = "none";
+      const S = 3; // scale factor for retina
+      const W = 390 * S;
+      const PITCH_W_PX = 342 * S;
+      const PITCH_H_PX = Math.round(342 * 1.4) * S;
+      const PITCH_R = 20 * S;
+      const DOT_R = 25 * S; // player circle radius
+      const HEADER_H = 180 * S;
+      const PITCH_TOP = HEADER_H;
+      const PITCH_LEFT = (W - PITCH_W_PX) / 2;
+      const TOTAL_H = PITCH_TOP + PITCH_H_PX + 40 * S;
 
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = TOTAL_H;
+      const ctx = canvas.getContext("2d");
+
+      // White background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, W, TOTAL_H);
+
+      // --- Header text ---
+      const textColor = "#1a1a1a";
+      const labelColor = "#999999";
+
+      // Date
+      ctx.fillStyle = labelColor;
+      ctx.font = `600 ${11 * S}px Inter, system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("DATE", W * 0.17, 30 * S);
+      ctx.fillStyle = textColor;
+      ctx.font = `600 ${15 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText(displayDate, W * 0.17, 52 * S);
+
+      // Kick-off
+      ctx.fillStyle = labelColor;
+      ctx.font = `600 ${11 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText("KICK-OFF", W * 0.5, 30 * S);
+      ctx.fillStyle = textColor;
+      ctx.font = `600 ${15 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText(displayTime, W * 0.5, 52 * S);
+
+      // Weather
+      ctx.fillStyle = labelColor;
+      ctx.font = `600 ${11 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText("WEATHER", W * 0.83, 30 * S);
+      ctx.fillStyle = textColor;
+      ctx.font = `600 ${15 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText(weather ? `${weather.icon} ${weather.temp}°` : "…", W * 0.83, 52 * S);
+
+      // Location
+      ctx.fillStyle = "#aaaaaa";
+      ctx.font = `400 ${11 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText(LOCATION, W / 2, 78 * S);
+
+      // White vs Black
+      ctx.fillStyle = textColor;
+      ctx.font = `700 ${14 * S}px Inter, system-ui, sans-serif`;
+      ctx.letterSpacing = `${2 * S}px`;
+      ctx.fillText("WHITE", W / 2 - 50 * S, 110 * S);
+      ctx.fillStyle = "#cccccc";
+      ctx.font = `400 ${12 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText("vs", W / 2, 110 * S);
+      ctx.fillStyle = textColor;
+      ctx.font = `700 ${14 * S}px Inter, system-ui, sans-serif`;
+      ctx.fillText("BLACK", W / 2 + 50 * S, 110 * S);
+
+      // --- Draw pitch (rounded rect) ---
+      ctx.fillStyle = FIELD_GREEN;
+      ctx.beginPath();
+      ctx.moveTo(PITCH_LEFT + PITCH_R, PITCH_TOP);
+      ctx.lineTo(PITCH_LEFT + PITCH_W_PX - PITCH_R, PITCH_TOP);
+      ctx.arcTo(PITCH_LEFT + PITCH_W_PX, PITCH_TOP, PITCH_LEFT + PITCH_W_PX, PITCH_TOP + PITCH_R, PITCH_R);
+      ctx.lineTo(PITCH_LEFT + PITCH_W_PX, PITCH_TOP + PITCH_H_PX - PITCH_R);
+      ctx.arcTo(PITCH_LEFT + PITCH_W_PX, PITCH_TOP + PITCH_H_PX, PITCH_LEFT + PITCH_W_PX - PITCH_R, PITCH_TOP + PITCH_H_PX, PITCH_R);
+      ctx.lineTo(PITCH_LEFT + PITCH_R, PITCH_TOP + PITCH_H_PX);
+      ctx.arcTo(PITCH_LEFT, PITCH_TOP + PITCH_H_PX, PITCH_LEFT, PITCH_TOP + PITCH_H_PX - PITCH_R, PITCH_R);
+      ctx.lineTo(PITCH_LEFT, PITCH_TOP + PITCH_R);
+      ctx.arcTo(PITCH_LEFT, PITCH_TOP, PITCH_LEFT + PITCH_R, PITCH_TOP, PITCH_R);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pitch lines
+      ctx.strokeStyle = FIELD_LINES;
+      ctx.lineWidth = 2 * S;
+      const px = (pct) => PITCH_LEFT + (pct / 300) * PITCH_W_PX;
+      const py = (pct) => PITCH_TOP + (pct / 420) * PITCH_H_PX;
+
+      // Outer boundary
+      ctx.strokeRect(px(12), py(12), (276 / 300) * PITCH_W_PX, (396 / 420) * PITCH_H_PX);
+      // Half line
+      ctx.beginPath(); ctx.moveTo(px(12), py(210)); ctx.lineTo(px(288), py(210)); ctx.stroke();
+      // Center circle
+      ctx.beginPath(); ctx.arc(px(150), py(210), (42 / 300) * PITCH_W_PX, 0, Math.PI * 2); ctx.stroke();
+      // Center dot
+      ctx.beginPath(); ctx.arc(px(150), py(210), 3 * S, 0, Math.PI * 2); ctx.fillStyle = FIELD_LINES; ctx.fill();
+      // Penalty areas
+      ctx.lineWidth = 1.5 * S;
+      ctx.strokeRect(px(72), py(12), (156 / 300) * PITCH_W_PX, (58 / 420) * PITCH_H_PX);
+      ctx.strokeRect(px(108), py(12), (84 / 300) * PITCH_W_PX, (26 / 420) * PITCH_H_PX);
+      ctx.strokeRect(px(72), py(350), (156 / 300) * PITCH_W_PX, (58 / 420) * PITCH_H_PX);
+      ctx.strokeRect(px(108), py(382), (84 / 300) * PITCH_W_PX, (26 / 420) * PITCH_H_PX);
+
+      // --- Load all player images ---
+      const allPlayers = [
+        ...slotsA.map((slot, idx) => ({ slot, idx, team: "A", player: lineupA[idx] })),
+        ...slotsB.map((slot, idx) => ({ slot, idx, team: "B", player: lineupB[idx] })),
+      ].filter((p) => p.player);
+
+      const imgPromises = allPlayers.map((p) => {
+        const src = p.team === "B" ? (p.player.blackJerseyImage || p.player.image) : p.player.image;
+        return loadImg(src);
+      });
+      const loadedImgs = await Promise.all(imgPromises);
+
+      // --- Draw players ---
+      allPlayers.forEach((p, i) => {
+        const abs = toAbsolute(p.slot, p.team);
+        const cx = PITCH_LEFT + (abs.x / 100) * PITCH_W_PX;
+        const cy = PITCH_TOP + (abs.y / 100) * PITCH_H_PX;
+        drawCircleImg(ctx, loadedImgs[i], cx, cy, DOT_R);
+      });
+
+      // --- Export & share ---
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
       const file = new File([blob], "golbol-lineup.png", { type: "image/png" });
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
@@ -284,7 +433,7 @@ export default function UpcomingMatch() {
       console.error("Share failed:", err);
     }
     setSharing(false);
-  }, [sharing]);
+  }, [sharing, lineupA, lineupB, slotsA, slotsB, displayDate, displayTime, weather]);
 
   const totalA = lineupA.reduce((s, p) => s + (p.rating || 5), 0);
   const totalB = lineupB.reduce((s, p) => s + (p.rating || 5), 0);
@@ -574,7 +723,7 @@ export default function UpcomingMatch() {
             className="h-14 px-5 rounded-2xl bg-secondary hover:bg-muted transition-colors flex items-center justify-center gap-2 font-semibold text-sm disabled:opacity-50"
           >
             <Share2 className="w-4 h-4" />
-            {sharing ? "..." : "Share"}
+            {sharing ? "..." : "Share Lineup"}
           </motion.button>
 
         {/* End Match button */}
@@ -593,100 +742,6 @@ export default function UpcomingMatch() {
         </div>
       </div>
 
-      {/* Hidden export div — rendered off-screen for html2canvas */}
-      <div
-        ref={shareRef}
-        style={{
-          display: "none",
-          position: "fixed",
-          top: "-9999px",
-          left: "-9999px",
-          width: 390,
-          fontFamily: "Inter, system-ui, sans-serif",
-        }}
-      >
-        <div style={{ background: "#fff", padding: 24, paddingBottom: 32 }}>
-          {/* Header info */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={{ textAlign: "center", flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>Date</div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a" }}>{displayDate}</div>
-            </div>
-            <div style={{ textAlign: "center", flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>Kick-off</div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a" }}>{displayTime}</div>
-            </div>
-            <div style={{ textAlign: "center", flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>Weather</div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a" }}>{weather ? `${weather.icon} ${weather.temp}°` : "…"}</div>
-            </div>
-          </div>
-          <div style={{ textAlign: "center", fontSize: 11, color: "#aaa", marginBottom: 16 }}>{LOCATION}</div>
-
-          {/* White vs Black */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginBottom: 16 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", textTransform: "uppercase", letterSpacing: 2 }}>White</span>
-            <span style={{ fontSize: 12, color: "#ccc" }}>vs</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", textTransform: "uppercase", letterSpacing: 2 }}>Black</span>
-          </div>
-
-          {/* Pitch */}
-          <div style={{
-            position: "relative",
-            width: "100%",
-            paddingBottom: "140%",
-            background: FIELD_GREEN,
-            borderRadius: 20,
-            overflow: "hidden",
-          }}>
-            {/* Pitch lines SVG */}
-            <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} viewBox="0 0 300 420" preserveAspectRatio="none">
-              <rect x="12" y="12" width="276" height="396" fill="none" stroke={FIELD_LINES} strokeWidth="2" />
-              <line x1="12" y1="210" x2="288" y2="210" stroke={FIELD_LINES} strokeWidth="2" />
-              <circle cx="150" cy="210" r="42" fill="none" stroke={FIELD_LINES} strokeWidth="2" />
-              <circle cx="150" cy="210" r="3" fill={FIELD_LINES} />
-              <rect x="72" y="12" width="156" height="58" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
-              <rect x="108" y="12" width="84" height="26" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
-              <rect x="72" y="350" width="156" height="58" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
-              <rect x="108" y="382" width="84" height="26" fill="none" stroke={FIELD_LINES} strokeWidth="1.5" />
-            </svg>
-
-            {/* Players */}
-            {slotsA.map((slot, idx) => {
-              const player = lineupA[idx];
-              if (!player) return null;
-              const abs = toAbsolute(slot, "A");
-              const imgSrc = player.image;
-              return (
-                <div key={`ea-${player.id}`} style={{
-                  position: "absolute", left: `${abs.x}%`, top: `${abs.y}%`,
-                  transform: "translate(-50%, -50%)", width: 50, height: 50,
-                  borderRadius: "50%", overflow: "hidden",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                }}>
-                  {imgSrc && <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-                </div>
-              );
-            })}
-            {slotsB.map((slot, idx) => {
-              const player = lineupB[idx];
-              if (!player) return null;
-              const abs = toAbsolute(slot, "B");
-              const imgSrc = player.blackJerseyImage || player.image;
-              return (
-                <div key={`eb-${player.id}`} style={{
-                  position: "absolute", left: `${abs.x}%`, top: `${abs.y}%`,
-                  transform: "translate(-50%, -50%)", width: 50, height: 50,
-                  borderRadius: "50%", overflow: "hidden",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                }}>
-                  {imgSrc && <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
