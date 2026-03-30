@@ -142,7 +142,7 @@ const players = [
     position: "DEF",
     rating: 3,
     image: "/players/white/mikey_shtricker.jpeg",
-    blackJerseyImage: null,
+    blackJerseyImage: "/players/black/mikey_shtricker.jpeg",
   },
   {
     id: 17,
@@ -253,7 +253,7 @@ const players = [
     position: "DEF",
     rating: 4,
     image: "/players/white/stav_zamir.jpeg",
-    blackJerseyImage: null,
+    blackJerseyImage: "/players/black/stav_zamir.jpeg",
   },
   {
     id: 29,
