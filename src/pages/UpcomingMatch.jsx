@@ -24,49 +24,49 @@ const FORMATIONS = {
   "1-3-3": {
     label: "1-3-3",
     slots: [
-      { x: 50, y: 5 },
-      { x: 18, y: 35 },
-      { x: 50, y: 35 },
-      { x: 82, y: 35 },
-      { x: 18, y: 68 },
-      { x: 50, y: 68 },
-      { x: 82, y: 68 },
+      { x: 50, y: 8 },
+      { x: 18, y: 40 },
+      { x: 50, y: 40 },
+      { x: 82, y: 40 },
+      { x: 18, y: 78 },
+      { x: 50, y: 78 },
+      { x: 82, y: 78 },
     ],
   },
   "1-3-1-2": {
     label: "1-3-1-2",
     slots: [
-      { x: 50, y: 5 },
-      { x: 18, y: 30 },
-      { x: 50, y: 30 },
-      { x: 82, y: 30 },
-      { x: 50, y: 52 },
-      { x: 33, y: 76 },
-      { x: 67, y: 76 },
+      { x: 50, y: 8 },
+      { x: 18, y: 36 },
+      { x: 50, y: 36 },
+      { x: 82, y: 36 },
+      { x: 50, y: 58 },
+      { x: 33, y: 82 },
+      { x: 67, y: 82 },
     ],
   },
   "1-4-1-1": {
     label: "1-4-1-1",
     slots: [
-      { x: 50, y: 5 },
-      { x: 10, y: 32 },
-      { x: 36, y: 32 },
-      { x: 64, y: 32 },
-      { x: 90, y: 32 },
-      { x: 50, y: 54 },
-      { x: 50, y: 76 },
+      { x: 50, y: 8 },
+      { x: 10, y: 36 },
+      { x: 36, y: 36 },
+      { x: 64, y: 36 },
+      { x: 90, y: 36 },
+      { x: 50, y: 58 },
+      { x: 50, y: 82 },
     ],
   },
   "1-2-3-1": {
     label: "1-2-3-1",
     slots: [
-      { x: 50, y: 5 },
-      { x: 30, y: 28 },
-      { x: 70, y: 28 },
-      { x: 18, y: 52 },
-      { x: 50, y: 52 },
-      { x: 82, y: 52 },
-      { x: 50, y: 76 },
+      { x: 50, y: 8 },
+      { x: 30, y: 34 },
+      { x: 70, y: 34 },
+      { x: 18, y: 58 },
+      { x: 50, y: 58 },
+      { x: 82, y: 58 },
+      { x: 50, y: 82 },
     ],
   },
 };
@@ -95,7 +95,7 @@ function getSlots(formationKey, teamSize, players) {
   const slots = formation.slots.slice(0, teamSize);
   // If team has a GK, ensure slot 0 is the GK slot (y=4, centered)
   if (gkIdx >= 0 && slots.length > 0) {
-    slots[0] = { x: 50, y: 2 }; // fixed GK position at the goal
+    slots[0] = { x: 50, y: 6 }; // fixed GK position at the goal
   }
 
   const extras = [];
@@ -197,7 +197,7 @@ function PlayerDot({ player, pctX, pctY, isBlack, isSelected, onTap }) {
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: isSelected ? 1.15 : 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
-        className={`w-[50px] h-[50px] rounded-full overflow-hidden shadow-md transition-shadow duration-200 ${
+        className={`w-[46px] h-[46px] rounded-full overflow-hidden shadow-md transition-shadow duration-200 ${
           isSelected ? "ring-2 ring-yellow-400 ring-offset-1 ring-offset-transparent" : ""
         }`}
       >
