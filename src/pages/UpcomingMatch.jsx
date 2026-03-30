@@ -197,7 +197,7 @@ function PlayerDot({ player, pctX, pctY, isBlack, isSelected, onTap }) {
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: isSelected ? 1.15 : 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
-        className={`w-[56px] h-[56px] rounded-full overflow-hidden shadow-md transition-shadow duration-200 ${
+        className={`w-[50px] h-[50px] rounded-full overflow-hidden shadow-md transition-shadow duration-200 ${
           isSelected ? "ring-2 ring-yellow-400 ring-offset-1 ring-offset-transparent" : ""
         }`}
       >
