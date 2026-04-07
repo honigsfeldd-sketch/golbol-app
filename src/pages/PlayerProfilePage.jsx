@@ -75,6 +75,7 @@ export default function PlayerProfilePage() {
   const player = location.state?.player;
   const darkKit = location.state?.darkKit || false;
   const [stats, setStats] = useState(null);
+  const isAdmin = sessionStorage.getItem("golbol_admin") === "true";
 
   useEffect(() => {
     if (player) {
@@ -133,10 +134,14 @@ export default function PlayerProfilePage() {
             <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground/50">
               {positionLabels[player.position] || player.position || "Player"}
             </span>
-            <span className="text-muted-foreground/20">·</span>
-            <span className="text-[11px] font-medium text-muted-foreground/50">
-              Rating {player.rating || 5}
-            </span>
+            {isAdmin && (
+              <>
+                <span className="text-muted-foreground/20">·</span>
+                <span className="text-[11px] font-medium text-muted-foreground/50">
+                  Rating {player.rating || 5}
+                </span>
+              </>
+            )}
           </div>
         </motion.div>
 

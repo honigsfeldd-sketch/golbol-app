@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Check } from "lucide-react";
+import { upcomingMatch } from "@/api/base44Client";
 
 function getTomorrowDate() {
   const d = new Date();
@@ -16,9 +17,21 @@ export default function ScheduleMatch() {
 
   const [date, setDate] = useState(getTomorrowDate());
   const [time, setTime] = useState("19:00");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const handleConfirm = () => {
-    navigate("/upcoming", { state: { teamA, teamB, selectedPlayers, date, time } });
+  const handleConfirm = async () => {
+    setSaving(true);
+    try {
+      await upcomingMatch.save({ teamA, teamB, date, time });
+      setSaved(true);
+      setTimeout(() => navigate("/upcoming"), 600);
+    } catch (err) {
+      console.error("Failed to save upcoming match:", err);
+      alert("Failed to save match. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const displayDate = date
@@ -102,10 +115,16 @@ export default function ScheduleMatch() {
           transition={{ delay: 0.24 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleConfirm}
-          disabled={!date || !time}
-          className="w-full h-14 rounded-2xl bg-foreground text-background font-semibold text-base disabled:opacity-30 transition-opacity"
+          disabled={!date || !time || saving}
+          className="w-full h-14 rounded-2xl bg-foreground text-background font-semibold text-base disabled:opacity-30 transition-opacity flex items-center justify-center gap-2"
         >
-          Confirm Match
+          {saving ? (
+            <div className="w-5 h-5 border-2 border-background/30 border-t-background rounded-full animate-spin" />
+          ) : saved ? (
+            <><Check className="w-5 h-5" /> Saved!</>
+          ) : (
+            "Confirm Match"
+          )}
         </motion.button>
       </div>
     </div>

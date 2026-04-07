@@ -268,6 +268,7 @@ export default function Home() {
         onClose={() => setProfilePlayer(null)}
         onEdit={handleEdit}
         onDeleted={loadPlayers}
+        isAdmin={false}
       />
 
       <AddPlayerModal
@@ -275,6 +276,7 @@ export default function Home() {
         onClose={() => { setShowAddModal(false); setEditPlayer(null); }}
         onAdded={loadPlayers}
         editPlayer={editPlayer}
+        isAdmin={false}
       />
     </div>
   );

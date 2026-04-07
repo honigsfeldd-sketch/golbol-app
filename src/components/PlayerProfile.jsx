@@ -32,7 +32,7 @@ function RatingRing({ rating }) {
   );
 }
 
-export default function PlayerProfile({ player, open, onClose, onEdit, onDeleted }) {
+export default function PlayerProfile({ player, open, onClose, onEdit, onDeleted, isAdmin = true }) {
   if (!player) return null;
 
   const handleDelete = async () => {
@@ -82,16 +82,18 @@ export default function PlayerProfile({ player, open, onClose, onEdit, onDeleted
 
         {/* Content */}
         <div className="bg-background p-6 space-y-6">
-          {/* Rating */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Rating</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {player.rating >= 8 ? "⚡ Elite" : player.rating >= 6 ? "✦ Good" : "▸ Average"}
-              </p>
+          {/* Rating — admin only */}
+          {isAdmin && (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Rating</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {player.rating >= 8 ? "⚡ Elite" : player.rating >= 6 ? "✦ Good" : "▸ Average"}
+                </p>
+              </div>
+              <RatingRing rating={player.rating || 5} />
             </div>
-            <RatingRing rating={player.rating || 5} />
-          </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-2">

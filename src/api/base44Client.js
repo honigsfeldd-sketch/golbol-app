@@ -181,6 +181,14 @@ export const matchHistory = {
     if (error) { console.error('Match delete error:', error); throw error; }
   },
 
+  async deleteAll() {
+    const { error } = await supabase
+      .from('matches')
+      .delete()
+      .neq('id', '');
+    if (error) { console.error('Match deleteAll error:', error); throw error; }
+  },
+
   async getPlayerStats(playerId) {
     const matches = await this.list();
     let total = 0, wins = 0, draws = 0, losses = 0, goals = 0, mvps = 0;
@@ -220,4 +228,72 @@ export const matchHistory = {
 
     return { matches: total, wins, draws, losses, goals, mvps, matchHistory };
   }
+};
+
+// ---------- UPCOMING MATCH API ----------
+export const upcomingMatch = {
+  async get() {
+    const { data, error } = await supabase
+      .from('upcoming_match')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    if (error) {
+      if (error.code === 'PGRST116') return null; // no rows
+      console.error('Upcoming match get error:', error);
+      return null;
+    }
+    return {
+      id: data.id,
+      teamA: data.team_a || [],
+      teamB: data.team_b || [],
+      date: data.date || null,
+      time: data.time || null,
+      lastUpdated: data.last_updated || data.created_at,
+    };
+  },
+
+  async save({ teamA, teamB, date, time }) {
+    // Delete any existing upcoming match first
+    await supabase.from('upcoming_match').delete().neq('id', 0);
+
+    const row = {
+      team_a: teamA,
+      team_b: teamB,
+      date: date || null,
+      time: time || null,
+      last_updated: new Date().toISOString(),
+    };
+    const { data, error } = await supabase
+      .from('upcoming_match')
+      .insert([row])
+      .select()
+      .single();
+    if (error) { console.error('Upcoming match save error:', error); throw error; }
+    return data.id;
+  },
+
+  async update(id, updates) {
+    const row = {};
+    if ('teamA' in updates) row.team_a = updates.teamA;
+    if ('teamB' in updates) row.team_b = updates.teamB;
+    if ('date' in updates) row.date = updates.date;
+    if ('time' in updates) row.time = updates.time;
+    row.last_updated = new Date().toISOString();
+
+    const { error } = await supabase
+      .from('upcoming_match')
+      .update(row)
+      .eq('id', id);
+    if (error) { console.error('Upcoming match update error:', error); throw error; }
+  },
+
+  async clear() {
+    const { error } = await supabase
+      .from('upcoming_match')
+      .delete()
+      .neq('id', 0);
+    if (error) { console.error('Upcoming match clear error:', error); throw error; }
+  },
 };

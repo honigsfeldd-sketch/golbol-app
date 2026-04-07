@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, User, Share2 } from "lucide-react";
+import { ArrowLeft, MapPin, User, Share2, Pencil, X, ArrowRightLeft, Trash2, Check } from "lucide-react";
+import { upcomingMatch } from "@/api/base44Client";
+import { base44 } from "@/api/base44Client";
 // Canvas-based share image (no html2canvas dependency)
 
 const LOCATION = "גולבול, אוניברסיטת תל אביב";
@@ -237,18 +239,112 @@ function FormationPills({ label, selected, onChange, side }) {
 
 // ---------- MAIN PAGE ----------
 export default function UpcomingMatch() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { teamA: initA = [], teamB: initB = [], date, time } = location.state || {};
-  const countdown = useCountdown(date, time);
-  const weather = useWeather(date, time);
 
-  const [lineupA, setLineupA] = useState(sortTeamGKFirst(initA));
-  const [lineupB, setLineupB] = useState(sortTeamGKFirst(initB));
+  const [loading, setLoading] = useState(true);
+  const [matchId, setMatchId] = useState(null);
+  const [date, setDate] = useState(null);
+  const [time, setTime] = useState(null);
+  const [lineupA, setLineupA] = useState([]);
+  const [lineupB, setLineupB] = useState([]);
   const [formationA, setFormationA] = useState("1-3-3");
   const [formationB, setFormationB] = useState("1-3-3");
-  const [selected, setSelected] = useState(null); // { team, idx }
+  const [selected, setSelected] = useState(null);
   const [sharing, setSharing] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [allPlayers, setAllPlayers] = useState([]);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [savedIndicator, setSavedIndicator] = useState(false);
+
+  // Load upcoming match from Supabase
+  useEffect(() => {
+    (async () => {
+      try {
+        const match = await upcomingMatch.get();
+        if (match) {
+          setMatchId(match.id);
+          setLineupA(sortTeamGKFirst(match.teamA || []));
+          setLineupB(sortTeamGKFirst(match.teamB || []));
+          setDate(match.date);
+          setTime(match.time);
+        }
+      } catch (err) {
+        console.error("Failed to load upcoming match:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Load all players for edit mode (replace player)
+  const loadAllPlayers = async () => {
+    const data = await base44.entities.Player.list("name");
+    setAllPlayers(data);
+  };
+
+  const openEditMode = async () => {
+    await loadAllPlayers();
+    setEditMode(true);
+  };
+
+  // Save edits to Supabase
+  const saveEdits = async (newA, newB) => {
+    if (!matchId) return;
+    setSavingEdit(true);
+    try {
+      await upcomingMatch.update(matchId, { teamA: newA || lineupA, teamB: newB || lineupB });
+      setSavedIndicator(true);
+      setTimeout(() => setSavedIndicator(false), 2000);
+    } catch (err) {
+      console.error("Failed to save edit:", err);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  // Move player between teams
+  const movePlayer = (player, fromTeam) => {
+    let newA, newB;
+    if (fromTeam === "A") {
+      newA = sortTeamGKFirst(lineupA.filter(p => String(p.id) !== String(player.id)));
+      newB = sortTeamGKFirst([...lineupB, player]);
+    } else {
+      newB = sortTeamGKFirst(lineupB.filter(p => String(p.id) !== String(player.id)));
+      newA = sortTeamGKFirst([...lineupA, player]);
+    }
+    setLineupA(newA);
+    setLineupB(newB);
+    saveEdits(newA, newB);
+  };
+
+  // Remove player from team
+  const removePlayer = (player, fromTeam) => {
+    let newA = lineupA, newB = lineupB;
+    if (fromTeam === "A") {
+      newA = lineupA.filter(p => String(p.id) !== String(player.id));
+      setLineupA(newA);
+    } else {
+      newB = lineupB.filter(p => String(p.id) !== String(player.id));
+      setLineupB(newB);
+    }
+    saveEdits(newA, newB);
+  };
+
+  // Replace player with another from squad
+  const replacePlayer = (oldPlayer, newPlayer, team) => {
+    let newA = lineupA, newB = lineupB;
+    if (team === "A") {
+      newA = sortTeamGKFirst(lineupA.map(p => String(p.id) === String(oldPlayer.id) ? newPlayer : p));
+      setLineupA(newA);
+    } else {
+      newB = sortTeamGKFirst(lineupB.map(p => String(p.id) === String(oldPlayer.id) ? newPlayer : p));
+      setLineupB(newB);
+    }
+    saveEdits(newA, newB);
+  };
+
+  const countdown = useCountdown(date, time);
+  const weather = useWeather(date, time);
 
   const totalA = lineupA.reduce((s, p) => s + (p.rating || 5), 0);
   const totalB = lineupB.reduce((s, p) => s + (p.rating || 5), 0);
@@ -469,14 +565,12 @@ export default function UpcomingMatch() {
       setSelected(null);
       return;
     }
-    // Swap
+    let newA, newB;
     if (selected.team === team) {
-      const setter = team === "A" ? setLineupA : setLineupB;
-      setter(prev => {
-        const next = [...prev];
-        [next[selected.idx], next[idx]] = [next[idx], next[selected.idx]];
-        return next;
-      });
+      const arr = team === "A" ? [...lineupA] : [...lineupB];
+      [arr[selected.idx], arr[idx]] = [arr[idx], arr[selected.idx]];
+      if (team === "A") { setLineupA(arr); newA = arr; newB = lineupB; }
+      else { setLineupB(arr); newA = lineupA; newB = arr; }
     } else {
       const fromArr = selected.team === "A" ? [...lineupA] : [...lineupB];
       const toArr = selected.team === "A" ? [...lineupB] : [...lineupA];
@@ -484,15 +578,49 @@ export default function UpcomingMatch() {
       fromArr[selected.idx] = toArr[idx];
       toArr[idx] = temp;
       if (selected.team === "A") {
-        setLineupA(fromArr);
-        setLineupB(toArr);
+        setLineupA(fromArr); setLineupB(toArr);
+        newA = fromArr; newB = toArr;
       } else {
-        setLineupB(fromArr);
-        setLineupA(toArr);
+        setLineupB(fromArr); setLineupA(toArr);
+        newA = toArr; newB = fromArr;
       }
     }
     setSelected(null);
+    saveEdits(newA, newB);
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-muted-foreground/20 border-t-foreground rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!matchId || (lineupA.length === 0 && lineupB.length === 0)) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl">
+          <div className="max-w-lg mx-auto px-6 py-4 flex items-center">
+            <button onClick={() => navigate("/")} className="w-9 h-9 rounded-full bg-secondary/60 flex items-center justify-center hover:bg-secondary transition-colors">
+              <ArrowLeft className="w-4 h-4 text-foreground/70" />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
+            <MapPin className="w-7 h-7 text-muted-foreground" />
+          </div>
+          <p className="font-semibold text-lg">No upcoming match</p>
+          <p className="text-sm text-muted-foreground mt-1">Create teams from the home screen to schedule a match</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Players available for replacement (not already in either team)
+  const usedIds = new Set([...lineupA, ...lineupB].map(p => String(p.id)));
+  const availablePlayers = allPlayers.filter(p => !usedIds.has(String(p.id)));
 
   return (
     <div className="min-h-screen bg-background">
@@ -505,7 +633,24 @@ export default function UpcomingMatch() {
           >
             <ArrowLeft className="w-4 h-4 text-foreground/70" />
           </button>
-          <div className="w-9" />
+          <div className="flex items-center gap-2">
+            {savedIndicator && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-1 text-xs font-medium text-primary"
+              >
+                <Check className="w-3.5 h-3.5" /> Saved
+              </motion.div>
+            )}
+            <button
+              onClick={openEditMode}
+              className="w-9 h-9 rounded-full bg-secondary/60 flex items-center justify-center hover:bg-secondary transition-colors"
+            >
+              <Pencil className="w-4 h-4 text-foreground/70" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -753,6 +898,145 @@ export default function UpcomingMatch() {
         </div>
       </div>
 
+      {/* Edit Teams Modal */}
+      <AnimatePresence>
+        {editMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center"
+            onClick={(e) => { if (e.target === e.currentTarget) setEditMode(false); }}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="w-full max-w-lg bg-background rounded-t-3xl max-h-[85vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+                <h2 className="text-base font-semibold">Edit Teams</h2>
+                <div className="flex items-center gap-2">
+                  {savingEdit && <div className="w-4 h-4 border-2 border-muted-foreground/20 border-t-foreground rounded-full animate-spin" />}
+                  <button
+                    onClick={() => setEditMode(false)}
+                    className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* White team */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                      White ({lineupA.length})
+                    </div>
+                    <div className="space-y-1.5">
+                      {lineupA.map((player) => (
+                        <div key={player.id} className="flex items-center gap-1.5">
+                          <div className="flex-1 flex items-center gap-2 px-2 py-1.5 rounded-xl bg-secondary/40">
+                            <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-zinc-200">
+                              {player.image ? (
+                                <img src={player.image} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center"><User className="w-3 h-3 text-zinc-400" /></div>
+                              )}
+                            </div>
+                            <span className="text-xs font-medium truncate">{player.nickname || player.name}</span>
+                          </div>
+                          <button onClick={() => movePlayer(player, "A")} className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-muted shrink-0">
+                            <ArrowRightLeft className="w-3 h-3 text-muted-foreground" />
+                          </button>
+                          <button onClick={() => removePlayer(player, "A")} className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 shrink-0">
+                            <Trash2 className="w-3 h-3 text-red-500" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Black team */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                      Black ({lineupB.length})
+                    </div>
+                    <div className="space-y-1.5">
+                      {lineupB.map((player) => (
+                        <div key={player.id} className="flex items-center gap-1.5">
+                          <div className="flex-1 flex items-center gap-2 px-2 py-1.5 rounded-xl bg-secondary/40">
+                            <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-zinc-800">
+                              {player.blackJerseyImage || player.image ? (
+                                <img src={player.blackJerseyImage || player.image} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center"><User className="w-3 h-3 text-zinc-500" /></div>
+                              )}
+                            </div>
+                            <span className="text-xs font-medium truncate">{player.nickname || player.name}</span>
+                          </div>
+                          <button onClick={() => movePlayer(player, "B")} className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-muted shrink-0">
+                            <ArrowRightLeft className="w-3 h-3 text-muted-foreground" />
+                          </button>
+                          <button onClick={() => removePlayer(player, "B")} className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 shrink-0">
+                            <Trash2 className="w-3 h-3 text-red-500" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Available players to add */}
+                {availablePlayers.length > 0 && (
+                  <div className="mt-6">
+                    <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                      Add Player
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {availablePlayers.map((player) => (
+                        <div key={player.id} className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              const newA = sortTeamGKFirst([...lineupA, player]);
+                              setLineupA(newA);
+                              saveEdits(newA, lineupB);
+                            }}
+                            className="px-2 py-1 rounded-lg bg-secondary/60 hover:bg-secondary text-[10px] font-medium transition-colors"
+                          >
+                            {player.nickname || player.name} → W
+                          </button>
+                          <button
+                            onClick={() => {
+                              const newB = sortTeamGKFirst([...lineupB, player]);
+                              setLineupB(newB);
+                              saveEdits(lineupA, newB);
+                            }}
+                            className="px-2 py-1 rounded-lg bg-zinc-800/60 hover:bg-zinc-800 text-white text-[10px] font-medium transition-colors"
+                          >
+                            B
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-5 py-4 border-t border-border/40">
+                <button
+                  onClick={() => setEditMode(false)}
+                  className="w-full h-12 rounded-2xl bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

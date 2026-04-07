@@ -12,7 +12,7 @@ const positions = [
   { value: "FWD", label: "FWD", full: "Forward", color: "bg-red-100 text-red-700" },
 ];
 
-export default function AddPlayerModal({ open, onClose, onAdded, editPlayer }) {
+export default function AddPlayerModal({ open, onClose, onAdded, editPlayer, isAdmin = true }) {
   const [name, setName] = useState("");
   const [position, setPosition] = useState("MID");
   const [rating, setRating] = useState(5);
@@ -136,27 +136,29 @@ export default function AddPlayerModal({ open, onClose, onAdded, editPlayer }) {
             </div>
           </div>
 
-          {/* Rating */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Rating</p>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-bold tabular-nums">{rating}</span>
-                <span className="text-xs text-muted-foreground">{ratingLabels[rating]}</span>
+          {/* Rating — admin only */}
+          {isAdmin && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Rating</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold tabular-nums">{rating}</span>
+                  <span className="text-xs text-muted-foreground">{ratingLabels[rating]}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setRating(n)}
+                    className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all ${n <= rating ? "bg-primary text-white" : "bg-secondary text-muted-foreground hover:bg-muted"}`}
+                  >
+                    {n}
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setRating(n)}
-                  className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all ${n <= rating ? "bg-primary text-white" : "bg-secondary text-muted-foreground hover:bg-muted"}`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* Save */}
           <motion.button
