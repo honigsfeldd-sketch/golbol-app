@@ -57,49 +57,76 @@ function generateBalancedTeams(players) {
   }
 
   // Fix iron rules by swapping players if needed
+  // Strategy: first enforce MUST_SEPARATE, then MUST_TOGETHER
+  // For MUST_TOGETHER, always move the non-separated player to the other's team
+  // (never move a MUST_SEPARATE player, to avoid undoing the separation)
   const fixIronRules = () => {
+    const separatedNames = new Set(MUST_SEPARATE.flat());
+
     for (let attempt = 0; attempt < 50; attempt++) {
       if (validateIronRules(teamA, teamB)) return;
 
-      // Find a violation and fix it
+      // Step 1: Fix MUST_SEPARATE violations
       for (const [a, b] of MUST_SEPARATE) {
         const aInA = teamA.findIndex(p => p.name === a);
         const bInA = teamA.findIndex(p => p.name === b);
         if (aInA >= 0 && bInA >= 0) {
-          const swapIdx = teamB.findIndex(p => !isLocked(p));
+          // Both in teamA — move b to teamB
+          const swapIdx = teamB.findIndex(p => !separatedNames.has(p.name));
           if (swapIdx >= 0) { const tmp = teamA[bInA]; teamA[bInA] = teamB[swapIdx]; teamB[swapIdx] = tmp; }
           continue;
         }
         const aInB = teamB.findIndex(p => p.name === a);
         const bInB = teamB.findIndex(p => p.name === b);
         if (aInB >= 0 && bInB >= 0) {
-          const swapIdx = teamA.findIndex(p => !isLocked(p));
+          // Both in teamB — move b to teamA
+          const swapIdx = teamA.findIndex(p => !separatedNames.has(p.name));
           if (swapIdx >= 0) { const tmp = teamB[bInB]; teamB[bInB] = teamA[swapIdx]; teamA[swapIdx] = tmp; }
         }
       }
+
+      // Step 2: Fix MUST_TOGETHER — move the NON-separated player to join the other
+      // Never move a player who is in MUST_SEPARATE (to avoid undoing step 1)
       for (const [a, b] of MUST_TOGETHER) {
         const aInA = teamA.findIndex(p => p.name === a);
-        const bInB = teamB.findIndex(p => p.name === b);
-        if (aInA >= 0 && bInB >= 0) {
-          const swapIdx = teamA.findIndex(p => !isLocked(p) && p.name !== a);
-          if (swapIdx >= 0) { const tmp = teamB[bInB]; teamB[bInB] = teamA[swapIdx]; teamA[swapIdx] = tmp; }
-          continue;
-        }
         const aInB = teamB.findIndex(p => p.name === a);
         const bInA = teamA.findIndex(p => p.name === b);
-        if (aInB >= 0 && bInA >= 0) {
-          const swapIdx = teamB.findIndex(p => !isLocked(p) && p.name !== a);
-          if (swapIdx >= 0) { const tmp = teamA[bInA]; teamA[bInA] = teamB[swapIdx]; teamB[swapIdx] = tmp; }
+        const bInB = teamB.findIndex(p => p.name === b);
+
+        // Check if both present but on different teams
+        const aTeam = aInA >= 0 ? "A" : aInB >= 0 ? "B" : null;
+        const bTeam = bInA >= 0 ? "A" : bInB >= 0 ? "B" : null;
+        if (!aTeam || !bTeam || aTeam === bTeam) continue;
+
+        // Decide who to move: prefer moving the one NOT in MUST_SEPARATE
+        const aIsSeparated = separatedNames.has(a);
+        const bIsSeparated = separatedNames.has(b);
+
+        if (bIsSeparated && !aIsSeparated) {
+          // Move a to b's team
+          if (bTeam === "A") {
+            // a is in B, move a to A
+            const swapIdx = teamA.findIndex(p => p.name !== b && !separatedNames.has(p.name));
+            if (swapIdx >= 0) { const tmp = teamB[aInB]; teamB[aInB] = teamA[swapIdx]; teamA[swapIdx] = tmp; }
+          } else {
+            // a is in A, move a to B
+            const swapIdx = teamB.findIndex(p => p.name !== b && !separatedNames.has(p.name));
+            if (swapIdx >= 0) { const tmp = teamA[aInA]; teamA[aInA] = teamB[swapIdx]; teamB[swapIdx] = tmp; }
+          }
+        } else {
+          // Move b to a's team (default, or when neither/both are separated)
+          if (aTeam === "A") {
+            // b is in B, move b to A
+            const swapIdx = teamA.findIndex(p => p.name !== a && !separatedNames.has(p.name));
+            if (swapIdx >= 0) { const tmp = teamB[bInB]; teamB[bInB] = teamA[swapIdx]; teamA[swapIdx] = tmp; }
+          } else {
+            // b is in A, move b to B
+            const swapIdx = teamB.findIndex(p => p.name !== a && !separatedNames.has(p.name));
+            if (swapIdx >= 0) { const tmp = teamA[bInA]; teamA[bInA] = teamB[swapIdx]; teamB[swapIdx] = tmp; }
+          }
         }
       }
     }
-  };
-
-  // Players locked by iron rules should not be swapped
-  const isLocked = (player) => {
-    return [...MUST_SEPARATE, ...MUST_TOGETHER].some(
-      ([a, b]) => player.name === a || player.name === b
-    );
   };
 
   fixIronRules();
