@@ -149,7 +149,9 @@ function useWeather(matchDate, matchTime) {
 function useCountdown(date, time) {
   const getRemaining = () => {
     if (!date || !time) return null;
-    const target = new Date(`${date}T${time}:00`);
+    // time from Supabase may be "19:45:00" or "19:45" — normalize
+    const t = time.length <= 5 ? `${time}:00` : time;
+    const target = new Date(`${date}T${t}`);
     const diff = target - new Date();
     if (diff <= 0) return { hours: "00", minutes: "00", seconds: "00" };
     const h = Math.floor(diff / 3600000);
