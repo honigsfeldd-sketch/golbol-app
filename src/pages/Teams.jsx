@@ -115,11 +115,20 @@ function generateBalancedTeams(players) {
       if (diff <= 2) {
         const ia = teamA.indexOf(pa);
         const ib = teamB.indexOf(pb);
+        // Only swap if it doesn't violate iron rules
         teamA[ia] = pb;
         teamB[ib] = pa;
+        if (!validateIronRules(teamA, teamB)) {
+          // Revert the swap
+          teamA[ia] = pa;
+          teamB[ib] = pb;
+        }
       }
     }
   }
+
+  // Final safety check — if iron rules are still violated, fix again
+  fixIronRules();
 
   return { teamA, teamB };
 }
