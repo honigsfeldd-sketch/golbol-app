@@ -133,8 +133,9 @@ function generateBalancedTeams(players) {
 
   if (teamA.length > 1 && teamB.length > 1) {
     // Random swap for variety — but never swap GKs or iron-rule-locked players
-    const swappableA = teamA.filter(p => !(gks.length >= 2 && p.position === "GK") && !isLocked(p));
-    const swappableB = teamB.filter(p => !(gks.length >= 2 && p.position === "GK") && !isLocked(p));
+    const lockedNames = new Set([...MUST_SEPARATE, ...MUST_TOGETHER].flat());
+    const swappableA = teamA.filter(p => !(gks.length >= 2 && p.position === "GK") && !lockedNames.has(p.name));
+    const swappableB = teamB.filter(p => !(gks.length >= 2 && p.position === "GK") && !lockedNames.has(p.name));
     if (swappableA.length && swappableB.length) {
       const pa = swappableA[Math.floor(Math.random() * swappableA.length)];
       const pb = swappableB[Math.floor(Math.random() * swappableB.length)];
