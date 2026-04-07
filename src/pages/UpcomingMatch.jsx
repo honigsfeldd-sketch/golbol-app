@@ -268,8 +268,8 @@ export default function UpcomingMatch() {
         const match = await upcomingMatch.get();
         if (match) {
           setMatchId(match.id);
-          setLineupA(sortTeamGKFirst(match.teamA || []));
-          setLineupB(sortTeamGKFirst(match.teamB || []));
+          setLineupA(sortTeamGKFirst((match.teamA || []).filter(Boolean)));
+          setLineupB(sortTeamGKFirst((match.teamB || []).filter(Boolean)));
           setDate(match.date);
           setTime(match.time);
         }
@@ -351,8 +351,8 @@ export default function UpcomingMatch() {
   const countdown = useCountdown(date, time);
   const weather = useWeather(date, time);
 
-  const totalA = lineupA.reduce((s, p) => s + (p.rating || 5), 0);
-  const totalB = lineupB.reduce((s, p) => s + (p.rating || 5), 0);
+  const totalA = lineupA.reduce((s, p) => s + (p?.rating || 5), 0);
+  const totalB = lineupB.reduce((s, p) => s + (p?.rating || 5), 0);
 
   const displayDate = date
     ? new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })
@@ -1212,3 +1212,4 @@ export default function UpcomingMatch() {
     </div>
   );
 }
+
