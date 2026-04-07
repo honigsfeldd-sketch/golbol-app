@@ -75,6 +75,16 @@ export const base44 = {
         await ensureSeeded();
         const row = playerToRow(playerData);
         if (playerData.name) row.name = playerData.name;
+
+        // Get next available id (sequence may be out of sync after seeding)
+        const { data: maxRow } = await supabase
+          .from('players')
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1)
+          .single();
+        row.id = (maxRow?.id || 0) + 1;
+
         const { data, error } = await supabase
           .from('players')
           .insert([row])

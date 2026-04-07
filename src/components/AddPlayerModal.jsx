@@ -43,7 +43,7 @@ export default function AddPlayerModal({ open, onClose, onAdded, editPlayer, isA
       onClose();
     } catch (err) {
       console.error("Save player error:", err);
-      alert("Failed to save player. Please try again.");
+      alert("Failed to save player: " + (err?.message || err?.details || JSON.stringify(err)));
     } finally {
       setSaving(false);
     }
