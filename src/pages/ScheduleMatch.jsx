@@ -4,10 +4,14 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Clock, Check } from "lucide-react";
 import { upcomingMatch } from "@/api/base44Client";
 
-function getTomorrowDate() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+function getTodayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isInPast(date, time) {
+  if (!date || !time) return false;
+  const matchDT = new Date(`${date}T${time}`);
+  return matchDT < new Date();
 }
 
 export default function ScheduleMatch() {
@@ -15,19 +19,28 @@ export default function ScheduleMatch() {
   const navigate = useNavigate();
   const { teamA = [], teamB = [], selectedPlayers = [] } = location.state || {};
 
-  const [date, setDate] = useState(getTomorrowDate());
+  const [date, setDate] = useState(getTodayDate());
   const [time, setTime] = useState("19:00");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const isPast = isInPast(date, time);
+
   const handleConfirm = async () => {
     setSaving(true);
     try {
-      await upcomingMatch.save({ teamA, teamB, date, time });
-      setSaved(true);
-      setTimeout(() => navigate("/upcoming"), 600);
+      if (isPast) {
+        // Past match — go straight to result entry
+        setSaved(true);
+        setTimeout(() => navigate("/post-match", { state: { teamA, teamB, date, time } }), 600);
+      } else {
+        // Future match — save as upcoming
+        await upcomingMatch.save({ teamA, teamB, date, time });
+        setSaved(true);
+        setTimeout(() => navigate("/upcoming"), 600);
+      }
     } catch (err) {
-      console.error("Failed to save upcoming match:", err);
+      console.error("Failed to save match:", err);
       alert("Failed to save match. Please try again.");
     } finally {
       setSaving(false);
@@ -49,7 +62,7 @@ export default function ScheduleMatch() {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="text-base font-semibold tracking-tight">Schedule Match</h1>
+          <h1 className="text-base font-semibold tracking-tight">{isPast ? "Log Past Match" : "Schedule Match"}</h1>
         </div>
       </div>
 
@@ -57,9 +70,11 @@ export default function ScheduleMatch() {
         {/* Intro label */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <p className="text-3xl font-bold tracking-tight leading-tight">
-            When's the<br />next game?
+            {isPast ? <>Log a past<br />match</> : <>When's the<br />next game?</>}
           </p>
-          <p className="text-muted-foreground text-sm mt-2">Pick a date and kick-off time.</p>
+          <p className="text-muted-foreground text-sm mt-2">
+            {isPast ? "Enter the date and time the match was played." : "Pick a date and kick-off time."}
+          </p>
         </motion.div>
 
         {/* Date picker */}
@@ -78,12 +93,14 @@ export default function ScheduleMatch() {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              min={new Date().toISOString().slice(0, 10)}
               className="w-full h-16 px-5 rounded-2xl bg-secondary text-base font-semibold outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
             />
           </div>
           {date && (
-            <p className="text-sm text-muted-foreground pl-1">{displayDate}</p>
+            <p className="text-sm text-muted-foreground pl-1">
+              {displayDate}
+              {isPast && <span className="ml-2 text-xs text-amber-500 font-medium">· Past match</span>}
+            </p>
           )}
         </motion.div>
 
@@ -121,9 +138,9 @@ export default function ScheduleMatch() {
           {saving ? (
             <div className="w-5 h-5 border-2 border-background/30 border-t-background rounded-full animate-spin" />
           ) : saved ? (
-            <><Check className="w-5 h-5" /> Saved!</>
+            <><Check className="w-5 h-5" /> {isPast ? "Loading..." : "Saved!"}</>
           ) : (
-            "Confirm Match"
+            isPast ? "Enter Results" : "Confirm Match"
           )}
         </motion.button>
       </div>
