@@ -35,12 +35,18 @@ export default function AddPlayerModal({ open, onClose, onAdded, editPlayer, isA
   const handleSave = async () => {
     if (!name.trim()) return;
     setSaving(true);
-    const data = { name: name.trim(), position, rating, image: image || undefined, blackJerseyImage: blackJerseyImage || undefined };
-    if (editPlayer) await base44.entities.Player.update(editPlayer.id, data);
-    else await base44.entities.Player.create(data);
-    setSaving(false);
-    onAdded();
-    onClose();
+    try {
+      const data = { name: name.trim(), position, rating, image: image || undefined, blackJerseyImage: blackJerseyImage || undefined };
+      if (editPlayer) await base44.entities.Player.update(editPlayer.id, data);
+      else await base44.entities.Player.create(data);
+      onAdded();
+      onClose();
+    } catch (err) {
+      console.error("Save player error:", err);
+      alert("Failed to save player. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleImageUpload = async (e) => {

@@ -49,12 +49,12 @@ function rowToPlayer(row) {
 function playerToRow(data) {
   const row = {};
   if ('name' in data) row.name = data.name;
-  if ('nickname' in data) row.nickname = data.nickname;
-  if ('nicknameAliases' in data) row.nickname_aliases = data.nicknameAliases;
-  if ('position' in data) row.position = data.position;
-  if ('rating' in data) row.rating = data.rating;
-  if ('image' in data) row.image = data.image;
-  if ('blackJerseyImage' in data) row.black_jersey_image = data.blackJerseyImage;
+  if ('nickname' in data) row.nickname = data.nickname || null;
+  if ('nicknameAliases' in data) row.nickname_aliases = data.nicknameAliases || [];
+  if ('position' in data) row.position = data.position || null;
+  if ('rating' in data) row.rating = data.rating || 5;
+  if ('image' in data) row.image = data.image || null;
+  if ('blackJerseyImage' in data) row.black_jersey_image = data.blackJerseyImage || null;
   return row;
 }
 
