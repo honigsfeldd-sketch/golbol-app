@@ -260,6 +260,8 @@ export default function UpcomingMatch() {
   // Replacement flow: which player is being replaced
   const [replacingPlayer, setReplacingPlayer] = useState(null); // { player, team }
   const [replaceSearch, setReplaceSearch] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Load upcoming match from Supabase
   useEffect(() => {
@@ -346,6 +348,27 @@ export default function UpcomingMatch() {
       setLineupB(newB);
     }
     saveEdits(newA, newB);
+  };
+
+  // Delete the upcoming match entirely
+  const deleteMatch = async () => {
+    setDeleting(true);
+    try {
+      await upcomingMatch.clear();
+      setMatchId(null);
+      setLineupA([]);
+      setLineupB([]);
+      setDate(null);
+      setTime(null);
+      setEditMode(false);
+      setShowDeleteConfirm(false);
+      setReplacingPlayer(null);
+      setReplaceSearch("");
+    } catch (err) {
+      console.error("Failed to delete match:", err);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const countdown = useCountdown(date, time);
@@ -911,7 +934,7 @@ export default function UpcomingMatch() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center"
-            onClick={(e) => { if (e.target === e.currentTarget) { setEditMode(false); setReplacingPlayer(null); } }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setEditMode(false); setReplacingPlayer(null); setShowDeleteConfirm(false); } }}
           >
             <motion.div
               initial={{ y: "100%" }}
@@ -938,7 +961,7 @@ export default function UpcomingMatch() {
                 <div className="flex items-center gap-2">
                   {savingEdit && <div className="w-4 h-4 border-2 border-muted-foreground/20 border-t-foreground rounded-full animate-spin" />}
                   <button
-                    onClick={() => { setEditMode(false); setReplacingPlayer(null); setReplaceSearch(""); }}
+                    onClick={() => { setEditMode(false); setReplacingPlayer(null); setReplaceSearch(""); setShowDeleteConfirm(false); }}
                     className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
                   >
                     <X className="w-4 h-4" />
@@ -999,7 +1022,7 @@ export default function UpcomingMatch() {
                     </div>
 
                     {/* Available players list */}
-                    <div className="flex-1 overflow-y-auto px-5 pb-4">
+                    <div className="flex-1 overflow-y-auto px-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
                       {(() => {
                         const searchLower = replaceSearch.toLowerCase().trim();
                         const filtered = availablePlayers.filter(p => {
@@ -1194,15 +1217,53 @@ export default function UpcomingMatch() {
                 )}
               </AnimatePresence>
 
-              {/* Done button — only in roster view */}
+              {/* Action buttons — only in roster view */}
               {!replacingPlayer && (
-                <div className="px-5 py-4 border-t border-border/40">
+                <div className="px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-border/40 space-y-3">
                   <button
-                    onClick={() => { setEditMode(false); setReplacingPlayer(null); }}
+                    onClick={() => { setEditMode(false); setReplacingPlayer(null); setShowDeleteConfirm(false); }}
                     className="w-full h-12 rounded-2xl bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-colors"
                   >
                     Done
                   </button>
+
+                  {!showDeleteConfirm ? (
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="w-full h-10 rounded-2xl text-red-500 font-medium text-sm hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Match
+                    </button>
+                  ) : (
+                    <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-3 space-y-3">
+                      <p className="text-sm text-center text-red-600 font-medium">
+                        Are you sure you want to delete this upcoming match?
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowDeleteConfirm(false)}
+                          className="flex-1 h-10 rounded-xl bg-secondary text-sm font-medium hover:bg-muted transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={deleteMatch}
+                          disabled={deleting}
+                          className="flex-1 h-10 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {deleting ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
